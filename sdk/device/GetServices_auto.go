@@ -7,9 +7,9 @@ package device
 import (
 	"context"
 	"github.com/juju/errors"
-	"github.com/use-go/onvif"
-	"github.com/use-go/onvif/sdk"
-	"github.com/use-go/onvif/device"
+	"github.com/jjbarbosa7/onvif"
+	"github.com/jjbarbosa7/onvif/sdk"
+	"github.com/jjbarbosa7/onvif/device"
 )
 
 // Call_GetServices forwards the call to dev.CallMethod() then parses the payload of the reply as a GetServicesResponse.

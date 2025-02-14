@@ -7,9 +7,9 @@ package event
 import (
 	"context"
 	"github.com/juju/errors"
-	"github.com/use-go/onvif"
-	"github.com/use-go/onvif/sdk"
-	"github.com/use-go/onvif/event"
+	"github.com/jjbarbosa7/onvif"
+	"github.com/jjbarbosa7/onvif/sdk"
+	"github.com/jjbarbosa7/onvif/event"
 )
 
 // Call_GetEventProperties forwards the call to dev.CallMethod() then parses the payload of the reply as a GetEventPropertiesResponse.
