@@ -1,7 +1,7 @@
 package api
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -33,7 +33,7 @@ var (
 	Logger = LoggerContext.Logger()
 )
 
-func RunApi() {
+func RunApi(timeDiff time.Duration) {
 	router := gin.Default()
 
 	router.POST("/:service/:method", func(c *gin.Context) {
@@ -50,7 +50,7 @@ func RunApi() {
 			Logger.Debug().Err(err).Msg("Failed to get rawx data")
 		}
 
-		message, err := callNecessaryMethod(serviceName, methodName, string(acceptedData), username, pass, xaddr)
+		message, err := callNecessaryMethod(serviceName, methodName, string(acceptedData), username, pass, xaddr, timeDiff)
 		if err != nil {
 			c.XML(http.StatusBadRequest, err.Error())
 		} else {
@@ -110,7 +110,7 @@ func RunApi() {
 	router.Run()
 }
 
-func callNecessaryMethod(serviceName, methodName, acceptedData, username, password, xaddr string) (string, error) {
+func callNecessaryMethod(serviceName, methodName, acceptedData, username, password, xaddr string, timeDiff time.Duration) (string, error) {
 	var methodStruct interface{}
 	var err error
 
@@ -141,14 +141,14 @@ func callNecessaryMethod(serviceName, methodName, acceptedData, username, passwo
 	soap := gosoap.NewEmptySOAP()
 	soap.AddStringBodyContent(*resp)
 	soap.AddRootNamespaces(onvif.Xlmns)
-	soap.AddWSSecurity(username, password)
+	soap.AddWSSecurity(username, password, timeDiff)
 
 	servResp, err := networking.SendSoap(new(http.Client), endpoint, soap.String())
 	if err != nil {
 		return "", errors.Annotate(err, "SendSoap")
 	}
 
-	rsp, err := ioutil.ReadAll(servResp.Body)
+	rsp, err := io.ReadAll(servResp.Body)
 	if err != nil {
 		return "", errors.Annotate(err, "ReadAll")
 	}
@@ -159,7 +159,7 @@ func callNecessaryMethod(serviceName, methodName, acceptedData, username, passwo
 }
 
 func getEndpoint(service, xaddr string) (string, error) {
-	dev, err := onvif.NewDevice(onvif.DeviceParams{Xaddr: xaddr})
+	dev, _, err := onvif.NewDevice(onvif.DeviceParams{Xaddr: xaddr})
 	if err != nil {
 		return "", errors.Annotate(err, "NewDevice")
 	}

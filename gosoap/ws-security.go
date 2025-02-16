@@ -9,19 +9,24 @@ import (
 	"github.com/elgs/gostrgen"
 )
 
-/*************************
+/*
+************************
+
 	WS-Security types
-*************************/
+
+************************
+*/
 const (
 	passwordType = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest"
 	encodingType = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary"
 )
 
-//Security type :XMLName xml.Name `xml:"http://purl.org/rss/1.0/modules/content/ encoded"`
+// Security type :XMLName xml.Name `xml:"http://purl.org/rss/1.0/modules/content/ encoded"`
 type Security struct {
 	//XMLName xml.Name  `xml:"wsse:Security"`
-	XMLName xml.Name `xml:"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd Security"`
-	Auth    wsAuth
+	MustUnderstand string   `xml:"s:mustUnderstand,attr"`
+	XMLName        xml.Name `xml:"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd Security"`
+	Auth           wsAuth
 }
 
 type password struct {
@@ -55,15 +60,16 @@ type wsAuth struct {
    </Security>
 */
 
-//NewSecurity get a new security
-func NewSecurity(username, passwd string) Security {
+// NewSecurity get a new security
+func NewSecurity(username, passwd string, timeDiff time.Duration) Security {
 	/** Generating Nonce sequence **/
 	charsToGenerate := 32
 	charSet := gostrgen.Lower | gostrgen.Digit
 
 	nonceSeq, _ := gostrgen.RandGen(charsToGenerate, charSet, "", "")
-	created := time.Now().UTC().Format(time.RFC3339Nano)
-	auth := Security{
+	created := time.Now().Add(timeDiff).UTC().Format(time.RFC3339Nano)
+	security := Security{
+		MustUnderstand: "1",
 		Auth: wsAuth{
 			Username: username,
 			Password: password{
@@ -78,10 +84,10 @@ func NewSecurity(username, passwd string) Security {
 		},
 	}
 
-	return auth
+	return security
 }
 
-//Digest = B64ENCODE( SHA1( B64DECODE( Nonce ) + Date + Password ) )
+// Digest = B64ENCODE( SHA1( B64DECODE( Nonce ) + Date + Password ) )
 func generateToken(Username string, Nonce string, Created string, Password string) string {
 	sDec, _ := base64.StdEncoding.DecodeString(Nonce)
 
