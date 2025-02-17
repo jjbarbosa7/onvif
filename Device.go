@@ -357,11 +357,6 @@ func (dev Device) callMethodDo(endpoint string, method interface{}, timeDiff tim
 	soap.AddRootNamespaces(Xlmns)
 	soap.AddAction()
 
-	// Get method name
-	methodName := reflect.TypeOf(method).Name()
-
-	fmt.Printf("Calling %s on %s\n", methodName, endpoint)
-
 	//Auth Handling
 	if !omitSecurityHeader && dev.params.Username != "" && dev.params.Password != "" {
 		soap.AddWSSecurity(dev.params.Username, dev.params.Password, timeDiff)

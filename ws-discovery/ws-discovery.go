@@ -8,21 +8,13 @@ import (
 )
 
 func buildProbeMessage(uuidV4 string, scopes, types []string, nmsp map[string]string) gosoap.SoapMessage {
-	//Список namespace
 	namespaces := make(map[string]string)
 	namespaces["a"] = "http://schemas.xmlsoap.org/ws/2004/08/addressing"
-	//namespaces["d"] = "http://schemas.xmlsoap.org/ws/2005/04/discovery"
 
 	probeMessage := gosoap.NewEmptySOAP()
 
 	probeMessage.AddRootNamespaces(namespaces)
-	//if len(nmsp) != 0 {
-	//	probeMessage.AddRootNamespaces(nmsp)
-	//}
 
-	//fmt.Println(probeMessage.String())
-
-	//Содержимое Head
 	var headerContent []*etree.Element
 
 	action := etree.NewElement("a:Action")
@@ -54,7 +46,6 @@ func buildProbeMessage(uuidV4 string, scopes, types []string, nmsp map[string]st
 			}
 		}
 		typesTag.CreateAttr("xmlns:d", "http://schemas.xmlsoap.org/ws/2005/04/discovery")
-		//typesTag.CreateAttr("xmlns:dp0", "http://www.onvif.org/ver10/network/wsdl")
 		var typesString string
 		for _, j := range types {
 			typesString += j
