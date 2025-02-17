@@ -21,7 +21,7 @@ func Call_SetMetadataConfiguration(ctx context.Context, dev *onvif.Device, reque
 		}
 	}
 	var reply Envelope
-	if httpReply, err := dev.CallMethod(request); err != nil {
+	if httpReply, err := dev.CallMethod(request,0,false); err != nil {
 		return reply.Body.SetMetadataConfigurationResponse, errors.Annotate(err, "call")
 	} else {
 		err = sdk.ReadAndParse(ctx, httpReply, &reply, "SetMetadataConfiguration")

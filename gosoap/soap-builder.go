@@ -14,7 +14,6 @@ type SoapMessage string
 // NewEmptySOAP return new SoapMessage
 func NewEmptySOAP() SoapMessage {
 	doc := buildSoapRoot()
-	//doc.IndentTabs()
 
 	res, _ := doc.WriteToString()
 
@@ -24,7 +23,6 @@ func NewEmptySOAP() SoapMessage {
 // NewSOAP Get a new soap message
 func NewSOAP(headContent []*etree.Element, bodyContent []*etree.Element, namespaces map[string]string) SoapMessage {
 	doc := buildSoapRoot()
-	//doc.IndentTabs()
 
 	res, _ := doc.WriteToString()
 
@@ -80,11 +78,10 @@ func (msg *SoapMessage) AddStringBodyContent(data string) {
 	if err := doc.ReadFromString(msg.String()); err != nil {
 		log.Println(err.Error())
 	}
-	//doc.FindElement("./Envelope/Body").AddChild(element)
+
 	bodyTag := doc.Root().SelectElement("Body")
 	bodyTag.AddChild(element)
 
-	//doc.IndentTabs()
 	res, _ := doc.WriteToString()
 
 	*msg = SoapMessage(res)
@@ -96,11 +93,10 @@ func (msg *SoapMessage) AddBodyContent(element *etree.Element) {
 	if err := doc.ReadFromString(msg.String()); err != nil {
 		log.Println(err.Error())
 	}
-	//doc.FindElement("./Envelope/Body").AddChild(element)
+
 	bodyTag := doc.Root().SelectElement("Body")
 	bodyTag.AddChild(element)
 
-	//doc.IndentTabs()
 	res, _ := doc.WriteToString()
 
 	*msg = SoapMessage(res)
@@ -121,7 +117,6 @@ func (msg *SoapMessage) AddBodyContents(elements []*etree.Element) {
 		}
 	}
 
-	//doc.IndentTabs()
 	res, _ := doc.WriteToString()
 
 	*msg = SoapMessage(res)
@@ -132,7 +127,6 @@ func (msg *SoapMessage) AddStringHeaderContent(data string) error {
 	doc := etree.NewDocument()
 
 	if err := doc.ReadFromString(data); err != nil {
-		//log.Println(err.Error())
 		return err
 	}
 
@@ -140,14 +134,12 @@ func (msg *SoapMessage) AddStringHeaderContent(data string) error {
 
 	doc = etree.NewDocument()
 	if err := doc.ReadFromString(msg.String()); err != nil {
-		//log.Println(err.Error())
 		return err
 	}
 
 	bodyTag := doc.Root().SelectElement("Header")
 	bodyTag.AddChild(element)
 
-	//doc.IndentTabs()
 	res, _ := doc.WriteToString()
 
 	*msg = SoapMessage(res)
@@ -165,7 +157,6 @@ func (msg *SoapMessage) AddHeaderContent(element *etree.Element) {
 	bodyTag := doc.Root().SelectElement("Header")
 	bodyTag.AddChild(element)
 
-	//doc.IndentTabs()
 	res, _ := doc.WriteToString()
 
 	*msg = SoapMessage(res)
@@ -186,7 +177,6 @@ func (msg *SoapMessage) AddHeaderContents(elements []*etree.Element) {
 		}
 	}
 
-	//doc.IndentTabs()
 	res, _ := doc.WriteToString()
 
 	*msg = SoapMessage(res)
@@ -199,7 +189,7 @@ func (msg *SoapMessage) AddRootNamespace(key, value string) {
 		log.Println(err.Error())
 	}
 	doc.Root().CreateAttr("xmlns:"+key, value)
-	//doc.IndentTabs()
+
 	res, _ := doc.WriteToString()
 
 	*msg = SoapMessage(res)
@@ -210,22 +200,6 @@ func (msg *SoapMessage) AddRootNamespaces(namespaces map[string]string) {
 	for key, value := range namespaces {
 		msg.AddRootNamespace(key, value)
 	}
-
-	/*
-		doc := etree.NewDocument()
-		if err := doc.ReadFromString(msg.String()); err != nil {
-			//log.Println(err.Error())
-			return err
-		}
-
-		for key, value := range namespaces {
-			doc.Root().CreateAttr("xmlns:" + key, value)
-		}
-
-		doc.IndentTabs()
-		res, _ := doc.WriteToString()
-
-		*msg = SoapMessage(res)*/
 }
 
 func buildSoapRoot() *etree.Document {
@@ -245,10 +219,6 @@ func buildSoapRoot() *etree.Document {
 
 // AddWSSecurity Header for soapMessage
 func (msg *SoapMessage) AddWSSecurity(username, password string, timeDiff time.Duration) {
-	//doc := etree.NewDocument()
-	//if err := doc.ReadFromString(msg.String()); err != nil {
-	//	log.Println(err.Error())
-	//}
 	/*
 		Getting an WS-Security struct representation
 	*/
@@ -262,7 +232,6 @@ func (msg *SoapMessage) AddWSSecurity(username, password string, timeDiff time.D
 
 	soapReq, err := xml.MarshalIndent(auth, "", "  ")
 	if err != nil {
-		//log.Printf("error: %v\n", err.Error())
 		panic(err)
 	}
 
@@ -270,36 +239,12 @@ func (msg *SoapMessage) AddWSSecurity(username, password string, timeDiff time.D
 		Adding WS-Security struct to SOAP header
 	*/
 	msg.AddStringHeaderContent(string(soapReq))
-
-	//doc.IndentTabs()
-	//res, _ := doc.WriteToString()
-	//
-	//*msg = SoapMessage(res)
 }
 
 // AddAction Header handling for soapMessage
 func (msg *SoapMessage) AddAction() {
-
 	doc := etree.NewDocument()
 	if err := doc.ReadFromString(msg.String()); err != nil {
 		log.Println(err.Error())
 	}
-	// opetaionTag := doc.Root().SelectElement("Body")
-
-	// firstElemnt := opetaionTag.Child[0]
-
-	// soapReq, err := xml.MarshalIndent(action, "", "  ")
-	// if err != nil {
-	// 	//log.Printf("error: %v\n", err.Error())
-	// 	panic(err)
-	// }
-	// /*
-	// 	Adding WS-Security struct to SOAP header
-	// */
-	// msg.AddStringHeaderContent(string(soapReq))
-
-	// //doc.IndentTabs()
-	// //res, _ := doc.WriteToString()
-	// //
-	// //*msg = SoapMessage(res)
 }

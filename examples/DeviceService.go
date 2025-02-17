@@ -21,7 +21,7 @@ func main() {
 	ctx := context.Background()
 
 	//Getting an camera instance
-	dev, err := goonvif.NewDevice(goonvif.DeviceParams{
+	dev, _, err := goonvif.NewDevice(goonvif.DeviceParams{
 		Xaddr:      "192.168.13.14:80",
 		Username:   login,
 		Password:   password,

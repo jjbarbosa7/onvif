@@ -21,7 +21,7 @@ func Call_StartMulticastStreaming(ctx context.Context, dev *onvif.Device, reques
 		}
 	}
 	var reply Envelope
-	if httpReply, err := dev.CallMethod(request); err != nil {
+	if httpReply, err := dev.CallMethod(request,0,false); err != nil {
 		return reply.Body.StartMulticastStreamingResponse, errors.Annotate(err, "call")
 	} else {
 		err = sdk.ReadAndParse(ctx, httpReply, &reply, "StartMulticastStreaming")

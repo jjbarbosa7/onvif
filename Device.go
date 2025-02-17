@@ -2,7 +2,6 @@ package onvif
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -105,14 +104,6 @@ func (dev *Device) GetDeviceParams() DeviceParams {
 	return dev.params
 }
 
-func readResponse(resp *http.Response) string {
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
-	}
-	return string(b)
-}
-
 // GetAvailableDevicesAtSpecificEthernetInterface ...
 func GetAvailableDevicesAtSpecificEthernetInterface(interfaceName string) ([]Device, error) {
 	// Call a ws-discovery Probe Message to Discover NVT type Devices
@@ -163,13 +154,13 @@ func (dev *Device) getTimeDiff(resp *http.Response) (time.Duration, error) {
 
 	utcE1 := doc.FindElement("./Envelope/Body/GetSystemDateAndTimeResponse/SystemDateAndTime/UTCDateTime")
 	if utcE1 == nil {
-		return 0, errors.New("UTCDateTime not found")
+		return 0, fmt.Errorf("UTCDateTime not found")
 	}
 
 	// Find the <Time> element
 	timeEl := utcE1.FindElement("./Time")
 	if timeEl == nil {
-		return 0, errors.New("time element not found in UTCDateTime")
+		return 0, fmt.Errorf("time element not found in UTCDateTime")
 	}
 	hourStr := strings.TrimSpace(timeEl.FindElement("Hour").Text())
 	minStr := strings.TrimSpace(timeEl.FindElement("Minute").Text())
@@ -191,7 +182,7 @@ func (dev *Device) getTimeDiff(resp *http.Response) (time.Duration, error) {
 	// Find the <Date> element
 	dateEl := utcE1.FindElement("./Date")
 	if dateEl == nil {
-		return 0, errors.New("date element not found in UTCDateTime")
+		return 0, fmt.Errorf("date element not found in UTCDateTime")
 	}
 	yearStr := strings.TrimSpace(dateEl.FindElement("Year").Text())
 	monthStr := strings.TrimSpace(dateEl.FindElement("Month").Text())
@@ -227,7 +218,6 @@ func (dev *Device) getSupportedServices(resp *http.Response) error {
 	resp.Body.Close()
 
 	if err := doc.ReadFromBytes(data); err != nil {
-		//log.Println(err.Error())
 		return err
 	}
 
@@ -255,20 +245,26 @@ func NewDevice(params DeviceParams) (*Device, time.Duration, error) {
 		dev.params.HttpClient = new(http.Client)
 	}
 
+	// Attempt to get the time difference between the client and the camera; this is used for WS-Security
+	// First try to get the time without authentication, as with some cameras (Axis), the authentication will fail
+	// if the time difference between the client and the camera is too large.
 	getTime := device.GetSystemDateAndTime{}
-	resp, err := dev.CallMethod(getTime, time.Duration(0))
+	resp, err := dev.CallMethod(getTime, time.Duration(0), true)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		return nil, time.Duration(0), errors.New(fmt.Sprintf("camera is not available at %s or it does not support ONVIF services (GetSystemDateAndTime): %v", dev.params.Xaddr, err))
+		resp, err = dev.CallMethod(getTime, time.Duration(0), false)
+		if err != nil || resp.StatusCode != http.StatusOK {
+			return nil, time.Duration(0), fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetSystemDateAndTime): %v", dev.params.Xaddr, err)
+		}
 	}
 	timeDiff, err := dev.getTimeDiff(resp)
 	if err != nil {
-		return nil, time.Duration(0), errors.New(fmt.Sprintf("camera is not available at %s or it does not support ONVIF services (GetSystemDateAndTime): %v", dev.params.Xaddr, err))
+		return nil, time.Duration(0), fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetSystemDateAndTime): %v", dev.params.Xaddr, err)
 	}
 
 	getCapabilities := device.GetCapabilities{Category: "All"}
-	resp, err = dev.CallMethod(getCapabilities, timeDiff)
+	resp, err = dev.CallMethod(getCapabilities, timeDiff, false)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		return nil, timeDiff, errors.New(fmt.Sprintf("camera is not available at %s or it does not support ONVIF services (GetCapabilities): %v", dev.params.Xaddr, err))
+		return nil, timeDiff, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetCapabilities): %v", dev.params.Xaddr, err)
 	}
 
 	err = dev.getSupportedServices(resp)
@@ -330,12 +326,12 @@ func (dev Device) getEndpoint(endpoint string) (string, error) {
 			return endpointURL, nil
 		}
 	}
-	return endpointURL, errors.New("target endpoint service not found")
+	return endpointURL, fmt.Errorf("target endpoint service not found")
 }
 
 // CallMethod functions call an method, defined <method> struct.
 // You should use Authenticate method to call authorized requests.
-func (dev Device) CallMethod(method interface{}, timeDiff time.Duration) (*http.Response, error) {
+func (dev Device) CallMethod(method interface{}, timeDiff time.Duration, omitSecurityHeader bool) (*http.Response, error) {
 	pkgPath := strings.Split(reflect.TypeOf(method).PkgPath(), "/")
 	pkg := strings.ToLower(pkgPath[len(pkgPath)-1])
 
@@ -343,11 +339,11 @@ func (dev Device) CallMethod(method interface{}, timeDiff time.Duration) (*http.
 	if err != nil {
 		return nil, err
 	}
-	return dev.callMethodDo(endpoint, method, timeDiff)
+	return dev.callMethodDo(endpoint, method, timeDiff, omitSecurityHeader)
 }
 
 // CallMethod functions call an method, defined <method> struct with authentication data
-func (dev Device) callMethodDo(endpoint string, method interface{}, timeDiff time.Duration) (*http.Response, error) {
+func (dev Device) callMethodDo(endpoint string, method interface{}, timeDiff time.Duration, omitSecurityHeader bool) (*http.Response, error) {
 	output, err := xml.MarshalIndent(method, "  ", "    ")
 	if err != nil {
 		return nil, err
@@ -361,8 +357,13 @@ func (dev Device) callMethodDo(endpoint string, method interface{}, timeDiff tim
 	soap.AddRootNamespaces(Xlmns)
 	soap.AddAction()
 
+	// Get method name
+	methodName := reflect.TypeOf(method).Name()
+
+	fmt.Printf("Calling %s on %s\n", methodName, endpoint)
+
 	//Auth Handling
-	if dev.params.Username != "" && dev.params.Password != "" {
+	if !omitSecurityHeader && dev.params.Username != "" && dev.params.Password != "" {
 		soap.AddWSSecurity(dev.params.Username, dev.params.Password, timeDiff)
 	}
 

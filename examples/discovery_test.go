@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"path"
 	"regexp"
@@ -21,15 +21,15 @@ func TestGetAvailableDevicesAtSpecificEthernetInterface(t *testing.T) {
 }
 
 func client() {
-	dev, err := onvif.NewDevice(onvif.DeviceParams{Xaddr: "192.168.3.10", Username: "admin", Password: "zsyy12345"})
+	dev, _, err := onvif.NewDevice(onvif.DeviceParams{Xaddr: "192.168.3.10", Username: "admin", Password: "zsyy12345"})
 	if err != nil {
 		panic(err)
 	}
 
 	log.Printf("output %+v", dev.GetServices())
 
-	res, err := dev.CallMethod(device.GetUsers{})
-	bs, _ := ioutil.ReadAll(res.Body)
+	res, err := dev.CallMethod(device.GetUsers{}, 0, false)
+	bs, _ := io.ReadAll(res.Body)
 	log.Printf("output %+v %s", res.StatusCode, bs)
 }
 

@@ -21,7 +21,7 @@ func Call_GotoHomePosition(ctx context.Context, dev *onvif.Device, request ptz.G
 		}
 	}
 	var reply Envelope
-	if httpReply, err := dev.CallMethod(request); err != nil {
+	if httpReply, err := dev.CallMethod(request,0,false); err != nil {
 		return reply.Body.GotoHomePositionResponse, errors.Annotate(err, "call")
 	} else {
 		err = sdk.ReadAndParse(ctx, httpReply, &reply, "GotoHomePosition")

@@ -21,7 +21,7 @@ func Call_RemoveVideoAnalyticsConfiguration(ctx context.Context, dev *onvif.Devi
 		}
 	}
 	var reply Envelope
-	if httpReply, err := dev.CallMethod(request); err != nil {
+	if httpReply, err := dev.CallMethod(request,0,false); err != nil {
 		return reply.Body.RemoveVideoAnalyticsConfigurationResponse, errors.Annotate(err, "call")
 	} else {
 		err = sdk.ReadAndParse(ctx, httpReply, &reply, "RemoveVideoAnalyticsConfiguration")
