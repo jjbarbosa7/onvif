@@ -124,7 +124,7 @@ func GetAvailableDevicesAtSpecificEthernetInterface(interfaceName string) ([]Dev
 		for _, xaddr := range doc.Root().FindElements("./Body/ProbeMatches/ProbeMatch/XAddrs") {
 			xaddr := strings.Split(strings.Split(xaddr.Text(), " ")[0], "/")[2]
 			if !nvtDevicesSeen[xaddr] {
-				dev, _, err := NewDevice(DeviceParams{Xaddr: strings.Split(xaddr, " ")[0]})
+				dev, _, _, err := NewDevice(DeviceParams{Xaddr: strings.Split(xaddr, " ")[0]})
 				if err != nil {
 					// TODO(jfsmig) print a warning
 				} else {
@@ -139,103 +139,61 @@ func GetAvailableDevicesAtSpecificEthernetInterface(interfaceName string) ([]Dev
 }
 
 func (dev *Device) getTimeDiff(resp *http.Response) (time.Duration, error) {
-	doc := etree.NewDocument()
-
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return 0, err
 	}
-
 	resp.Body.Close()
 
-	if err := doc.ReadFromBytes(data); err != nil {
+	systemDateTime, err := dev.DecodeSystemDateTime(data)
+	if err != nil {
 		return 0, err
 	}
 
-	utcE1 := doc.FindElement("./Envelope/Body/GetSystemDateAndTimeResponse/SystemDateAndTime/UTCDateTime")
-	if utcE1 == nil {
+	if systemDateTime.UTCDateTime.IsZero() {
 		return 0, fmt.Errorf("UTCDateTime not found")
 	}
 
-	// Find the <Time> element
-	timeEl := utcE1.FindElement("./Time")
-	if timeEl == nil {
-		return 0, fmt.Errorf("time element not found in UTCDateTime")
-	}
-	hourStr := strings.TrimSpace(timeEl.FindElement("Hour").Text())
-	minStr := strings.TrimSpace(timeEl.FindElement("Minute").Text())
-	secStr := strings.TrimSpace(timeEl.FindElement("Second").Text())
-
-	hour, err := strconv.Atoi(hourStr)
-	if err != nil {
-		return 0, err
-	}
-	min, err := strconv.Atoi(minStr)
-	if err != nil {
-		return 0, err
-	}
-	sec, err := strconv.Atoi(secStr)
-	if err != nil {
-		return 0, err
-	}
-
-	// Find the <Date> element
-	dateEl := utcE1.FindElement("./Date")
-	if dateEl == nil {
-		return 0, fmt.Errorf("date element not found in UTCDateTime")
-	}
-	yearStr := strings.TrimSpace(dateEl.FindElement("Year").Text())
-	monthStr := strings.TrimSpace(dateEl.FindElement("Month").Text())
-	dayStr := strings.TrimSpace(dateEl.FindElement("Day").Text())
-
-	year, err := strconv.Atoi(yearStr)
-	if err != nil {
-		return 0, err
-	}
-	monthInt, err := strconv.Atoi(monthStr)
-	if err != nil {
-		return 0, err
-	}
-	day, err := strconv.Atoi(dayStr)
-	if err != nil {
-		return 0, err
-	}
-
-	utcDateTime := time.Date(year, time.Month(monthInt), day, hour, min, sec, 0, time.UTC)
-	timeDiff := time.Now().UTC().Sub(utcDateTime)
+	timeDiff := time.Now().UTC().Sub(systemDateTime.UTCDateTime)
 
 	return timeDiff, nil
 }
 
-func (dev *Device) getSupportedServices(resp *http.Response) error {
-	doc := etree.NewDocument()
-
+func (dev *Device) getSupportedServices(resp *http.Response) (*device.Capabilities, error) {
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
 	resp.Body.Close()
 
-	if err := doc.ReadFromBytes(data); err != nil {
-		return err
+	capabiities, err := dev.DecodeCapabilities(data)
+	if err != nil {
+		return nil, err
+	}
+	if capabiities.Analytics.XAddr != "" {
+		dev.addEndpoint("Analytics", capabiities.Analytics.XAddr)
+	}
+	if capabiities.Device.XAddr != "" {
+		dev.addEndpoint("Device", capabiities.Device.XAddr)
+	}
+	if capabiities.Events.XAddr != "" {
+		dev.addEndpoint("Events", capabiities.Events.XAddr)
+	}
+	if capabiities.Imaging.XAddr != "" {
+		dev.addEndpoint("Imaging", capabiities.Imaging.XAddr)
+	}
+	if capabiities.Media.XAddr != "" {
+		dev.addEndpoint("Media", capabiities.Media.XAddr)
+	}
+	if capabiities.PTZ.XAddr != "" {
+		dev.addEndpoint("PTZ", capabiities.PTZ.XAddr)
 	}
 
-	services := doc.FindElements("./Envelope/Body/GetCapabilitiesResponse/Capabilities/*/XAddr")
-	for _, j := range services {
-		dev.addEndpoint(j.Parent().Tag, j.Text())
-	}
-
-	extension_services := doc.FindElements("./Envelope/Body/GetCapabilitiesResponse/Capabilities/Extension/*/XAddr")
-	for _, j := range extension_services {
-		dev.addEndpoint(j.Parent().Tag, j.Text())
-	}
-
-	return nil
+	return capabiities, nil
 }
 
 // NewDevice function construct a ONVIF Device entity
-func NewDevice(params DeviceParams) (*Device, time.Duration, error) {
+func NewDevice(params DeviceParams) (*Device, time.Duration, *device.Capabilities, error) {
 	dev := new(Device)
 	dev.params = params
 	dev.endpoints = make(map[string]string)
@@ -253,26 +211,26 @@ func NewDevice(params DeviceParams) (*Device, time.Duration, error) {
 	if err != nil || resp.StatusCode != http.StatusOK {
 		resp, err = dev.CallMethod(getTime, time.Duration(0), false)
 		if err != nil || resp.StatusCode != http.StatusOK {
-			return nil, time.Duration(0), fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetSystemDateAndTime): %v", dev.params.Xaddr, err)
+			return nil, time.Duration(0), nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetSystemDateAndTime): %v", dev.params.Xaddr, err)
 		}
 	}
 	timeDiff, err := dev.getTimeDiff(resp)
 	if err != nil {
-		return nil, time.Duration(0), fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetSystemDateAndTime): %v", dev.params.Xaddr, err)
+		return nil, time.Duration(0), nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetSystemDateAndTime): %v", dev.params.Xaddr, err)
 	}
 
 	getCapabilities := device.GetCapabilities{Category: "All"}
 	resp, err = dev.CallMethod(getCapabilities, timeDiff, false)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		return nil, timeDiff, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetCapabilities): %v", dev.params.Xaddr, err)
+		return nil, timeDiff, nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetCapabilities): %v", dev.params.Xaddr, err)
 	}
 
-	err = dev.getSupportedServices(resp)
+	capabilities, err := dev.getSupportedServices(resp)
 	if err != nil {
-		return nil, timeDiff, err
+		return nil, timeDiff, nil, err
 	}
 
-	return dev, timeDiff, nil
+	return dev, timeDiff, capabilities, nil
 }
 
 func (dev *Device) addEndpoint(Key, Value string) {

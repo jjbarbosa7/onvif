@@ -10,15 +10,15 @@ import (
 //TODO: type <typeName> struct {Any string} convert to type <typeName> AnyType
 //TODO: process restrictions
 
-//todo посмотреть все Extensions (Any string)
-//todo что делать с xs:any = Any
-//todo IntList и ему подобные. Проверить нужен ли слайс. Изменить на slice
-//todo посмотреть можно ли заменить StreamType и ему подобные типы на вмтроенные типы
-//todo оттестировать тип VideoSourceMode из-за Description-а
+// TODO: Review all Extensions (Any string)
+// TODO: Determine what to do with xs:any (Any)
+// TODO: IntList and similar types. Check if a slice is needed. Change to slice.
+// TODO: Check if types like StreamType and similar can be replaced with built-in types.
+// TODO: Test the VideoSourceMode type because of the Description.
 
-//todo в документации описать, что Capabilities повторяеся у каждого сервиса, поэтому у каждого свой Capabilities (MediaCapabilities)
-//todo AuxiliaryData и другие simpleTypes, как реализовать рестрикшн
-//todo Name и ему подобные необходимо изучить на наличие "List of..." ошибок
+// TODO: In the documentation, note that Capabilities are repeated for each service, so each service has its own Capabilities (MediaCapabilities).
+// TODO: For AuxiliaryData and other simpleTypes, figure out how to implement restrictions.
+// TODO: Investigate Name and similar fields for any "List of..." errors.
 
 //todo Add in buit in
 
