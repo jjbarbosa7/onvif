@@ -11,7 +11,7 @@ import (
 	"github.com/jjbarbosa7/onvif/xsd/onvif"
 )
 
-func gettimeTimeFromXsdDateTime(xsdDateTime *etree.Element) (time.Time, error) {
+func getTimeFromXsdDateTime(xsdDateTime *etree.Element) (time.Time, error) {
 	// Find the <Time> element
 	timeElement := xsdDateTime.FindElement("./Time")
 	if timeElement == nil {
@@ -61,11 +61,11 @@ func gettimeTimeFromXsdDateTime(xsdDateTime *etree.Element) (time.Time, error) {
 
 	return utcDateTime, nil
 }
-func gettimeDurationFromXsdDuration(xsdDuration *etree.Element) (time.Duration, error) {
+func getTimeDurationFromXsdDuration(xsdDuration *etree.Element) (device.TimeDuration, error) {
 	// Find the <Time> element
 	timeElement := xsdDuration.FindElement("./Time")
 	if timeElement == nil {
-		return 0, fmt.Errorf("time element not found in xds.Duration")
+		return "", fmt.Errorf("time element not found in xds.Duration")
 	}
 
 	hourStr := strings.TrimSpace(timeElement.FindElement("Hour").Text())
@@ -74,20 +74,22 @@ func gettimeDurationFromXsdDuration(xsdDuration *etree.Element) (time.Duration, 
 
 	hour, err := strconv.Atoi(hourStr)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 	min, err := strconv.Atoi(minStr)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 	sec, err := strconv.Atoi(secStr)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	duration := time.Duration(hour)*time.Hour + time.Duration(min)*time.Minute + time.Duration(sec)*time.Second
 
-	return duration, nil
+	timeDuration := device.TimeDuration(duration.String())
+
+	return timeDuration, nil
 }
 
 func (dev *Device) DecodeSystemDateTime(data []byte) (*device.SystemDateTime, error) {
@@ -109,10 +111,10 @@ func (dev *Device) DecodeSystemDateTime(data []byte) (*device.SystemDateTime, er
 		systemDateTime.TimeZone = e.Text()
 	}
 	if e := doc.FindElement("./Envelope/Body/GetSystemDateAndTimeResponse/SystemDateAndTime/UTCDateTime"); e != nil {
-		systemDateTime.UTCDateTime, _ = gettimeTimeFromXsdDateTime(e)
+		systemDateTime.UTCDateTime, _ = getTimeFromXsdDateTime(e)
 	}
 	if e := doc.FindElement("./Envelope/Body/GetSystemDateAndTimeResponse/SystemDateAndTime/LocalDateTime"); e != nil {
-		systemDateTime.LocalDateTime, _ = gettimeTimeFromXsdDateTime(e)
+		systemDateTime.LocalDateTime, _ = getTimeFromXsdDateTime(e)
 	}
 
 	return &systemDateTime, nil
@@ -516,7 +518,7 @@ func (dev *Device) DecodePTZConfiguration(data []byte) (*device.PTZConfiguration
 		}
 	}
 	if e := configuration.FindElement("DefaultPTZTimeout"); e != nil {
-		ptzConfiguration.DefaultPTZTimeout, _ = gettimeDurationFromXsdDuration(e)
+		ptzConfiguration.DefaultPTZTimeout, _ = getTimeDurationFromXsdDuration(e)
 	}
 	if e := configuration.FindElement("PanTiltLimits"); e != nil {
 		if e1 := e.FindElement("Range"); e1 != nil {
@@ -702,7 +704,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]device.Profile, error) {
 				}
 			}
 			if e1 := e.FindElement("SessionTimeout"); e1 != nil {
-				sessionTimeout, err := gettimeDurationFromXsdDuration(e1)
+				sessionTimeout, err := getTimeDurationFromXsdDuration(e1)
 				if err == nil {
 					profile.VideoEncoderConfiguration.SessionTimeout = sessionTimeout
 				}
@@ -751,7 +753,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]device.Profile, error) {
 				}
 			}
 			if e1 := e.FindElement("SessionTimeout"); e1 != nil {
-				sessionTimeout, err := gettimeDurationFromXsdDuration(e1)
+				sessionTimeout, err := getTimeDurationFromXsdDuration(e1)
 				if err == nil {
 					profile.AudioEncoderConfiguration.SessionTimeout = sessionTimeout
 				}
@@ -873,7 +875,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]device.Profile, error) {
 				}
 			}
 			if e1 := e.FindElement("DefaultPTZTimeout"); e1 != nil {
-				ptzTimeout, err := gettimeDurationFromXsdDuration(e1)
+				ptzTimeout, err := getTimeDurationFromXsdDuration(e1)
 				if err == nil {
 					profile.PTZConfiguration.DefaultPTZTimeout = ptzTimeout
 				}
@@ -965,7 +967,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]device.Profile, error) {
 				}
 			}
 			if e1 := e.FindElement("SessionTimeout"); e1 != nil {
-				sessionTimeout, err := gettimeDurationFromXsdDuration(e1)
+				sessionTimeout, err := getTimeDurationFromXsdDuration(e1)
 				if err == nil {
 					profile.MetadataConfiguration.SessionTimeout = sessionTimeout
 				}
@@ -1098,7 +1100,7 @@ func (dev *Device) DecodeStatus(data []byte) (*device.PTZStatus, error) {
 		ptzStatus.Error = e.Text()
 	}
 	if e := status.FindElement("UtcTime"); e != nil {
-		ptzStatus.UtcTime, _ = gettimeTimeFromXsdDateTime(e)
+		ptzStatus.UtcTime, _ = getTimeFromXsdDateTime(e)
 	}
 
 	return &ptzStatus, nil

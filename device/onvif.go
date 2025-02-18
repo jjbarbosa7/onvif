@@ -8,6 +8,8 @@ import (
 
 // Translation of onvif types from wsdl to go
 
+type TimeDuration string
+
 type DeviceEntity struct {
 	Token onvif.ReferenceToken `bson:"token" json:"token"`
 }
@@ -249,7 +251,7 @@ type ImagingSettingsExtension202 struct {
 type IrCutFilterAutoAdjustment struct {
 	BoundaryType   string            `bson:"boundaryType" json:"boundaryType"`
 	BoundaryOffset float64           `bson:"boundaryOffset" json:"boundaryOffset"`
-	ResponseTime   time.Duration     `bson:"responseTime" json:"responseTime"`
+	ResponseTime   TimeDuration      `bson:"responseTime" json:"responseTime"`
 	Extension      map[string]string `bson:"extension" json:"extension"`
 }
 
@@ -366,7 +368,7 @@ type VideoEncoderConfiguration struct {
 	MPEG4          Mpeg4Configuration     `bson:"mpeg4" json:"mpeg4"`
 	H264           H264Configuration      `bson:"h264" json:"h264"`
 	Multicast      MulticastConfiguration `bson:"multicast" json:"multicast"`
-	SessionTimeout time.Duration          `bson:"sessionTimeout" json:"sessionTimeout"`
+	SessionTimeout TimeDuration           `bson:"sessionTimeout" json:"sessionTimeout"`
 }
 
 type VideoRateControl struct {
@@ -404,7 +406,7 @@ type AudioEncoderConfiguration struct {
 	Bitrate        int                    `bson:"bitrate" json:"bitrate"`
 	SampleRate     int                    `bson:"sampleRate" json:"sampleRate"`
 	Multicast      MulticastConfiguration `bson:"multicast" json:"multicast"`
-	SessionTimeout time.Duration          `bson:"sessionTimeout" json:"sessionTimeout"`
+	SessionTimeout TimeDuration           `bson:"sessionTimeout" json:"sessionTimeout"`
 }
 
 type VideoAnalyticsConfiguration struct {
@@ -462,7 +464,7 @@ type PTZConfiguration struct {
 	DefaultContinuousPanTiltVelocitySpace  string                    `bson:"defaultContinuousPanTiltVelocitySpace" json:"defaultContinuousPanTiltVelocitySpace"`
 	DefaultContinuousZoomVelocitySpace     string                    `bson:"defaultContinuousZoomVelocitySpace" json:"defaultContinuousZoomVelocitySpace"`
 	DefaultPTZSpeed                        PTZSpeed                  `bson:"defaultPTZSpeed" json:"defaultPTZSpeed"`
-	DefaultPTZTimeout                      time.Duration             `bson:"defaultPTZTimeout" json:"defaultPTZTimeout"`
+	DefaultPTZTimeout                      TimeDuration              `bson:"defaultPTZTimeout" json:"defaultPTZTimeout"`
 	PanTiltLimits                          PanTiltLimits             `bson:"panTiltLimits" json:"panTiltLimits"`
 	ZoomLimits                             ZoomLimits                `bson:"zoomLimits" json:"zoomLimits"`
 	Extension                              PTZConfigurationExtension `bson:"extension" json:"extension"`
@@ -530,7 +532,7 @@ type MetadataConfiguration struct {
 	Events                       EventSubscription            `bson:"events" json:"events"`
 	Analytics                    bool                         `bson:"analytics" json:"analytics"`
 	Multicast                    MulticastConfiguration       `bson:"multicast" json:"multicast"`
-	SessionTimeout               time.Duration                `bson:"sessionTimeout" json:"sessionTimeout"`
+	SessionTimeout               TimeDuration                 `bson:"sessionTimeout" json:"sessionTimeout"`
 	AnalyticsEngineConfiguration AnalyticsEngineConfiguration `bson:"analyticsEngineConfiguration" json:"analyticsEngineConfiguration"`
 	Extension                    map[string]string            `bson:"extension" json:"extension"`
 }
@@ -711,10 +713,10 @@ type Transport struct {
 }
 
 type MediaUri struct {
-	Uri                 string        `bson:"uri" json:"uri"`
-	InvalidAfterConnect bool          `bson:"invalidAfterConnect" json:"invalidAfterConnect"`
-	InvalidAfterReboot  bool          `bson:"invalidAfterReboot" json:"invalidAfterReboot"`
-	Timeout             time.Duration `bson:"timeout" json:"timeout"`
+	Uri                 string       `bson:"uri" json:"uri"`
+	InvalidAfterConnect bool         `bson:"invalidAfterConnect" json:"invalidAfterConnect"`
+	InvalidAfterReboot  bool         `bson:"invalidAfterReboot" json:"invalidAfterReboot"`
+	Timeout             TimeDuration `bson:"timeout" json:"timeout"`
 }
 
 type VideoSourceMode struct {
@@ -845,8 +847,8 @@ type IntAttrList struct {
 }
 
 type DurationRange struct {
-	Min time.Duration `bson:"min" json:"min"`
-	Max time.Duration `bson:"max" json:"max"`
+	Min TimeDuration `bson:"min" json:"min"`
+	Max TimeDuration `bson:"max" json:"max"`
 }
 
 type PTControlDirectionOptions struct {
@@ -916,7 +918,7 @@ type PTZPresetTourStatus struct {
 type PTZPresetTourSpot struct {
 	PresetDetail PTZPresetTourPresetDetail `bson:"presetDetail" json:"presetDetail"`
 	Speed        PTZSpeed                  `bson:"speed" json:"speed"`
-	StayTime     time.Duration             `bson:"stayTime" json:"stayTime"`
+	StayTime     TimeDuration              `bson:"stayTime" json:"stayTime"`
 	Extension    map[string]string         `bson:"extension" json:"extension"`
 }
 
@@ -930,7 +932,7 @@ type PTZPresetTourPresetDetail struct {
 type PTZPresetTourStartingCondition struct {
 	RandomPresetOrder bool              `bson:"randomPresetOrder" json:"randomPresetOrder"`
 	RecurringTime     int               `bson:"recurringTime" json:"recurringTime"`
-	RecurringDuration time.Duration     `bson:"recurringDuration" json:"recurringDuration"`
+	RecurringDuration TimeDuration      `bson:"recurringDuration" json:"recurringDuration"`
 	Direction         string            `bson:"direction" json:"direction"`
 	Extension         map[string]string `bson:"extension" json:"extension"`
 }
@@ -1176,7 +1178,7 @@ type NTPInformation struct {
 type DynamicDNSInformation struct {
 	Type      string            `bson:"type" json:"type"`
 	Name      string            `bson:"name" json:"name"`
-	TTL       time.Duration     `bson:"ttl" json:"ttl"`
+	TTL       TimeDuration      `bson:"ttl" json:"ttl"`
 	Extension map[string]string `bson:"extension" json:"extension"`
 }
 
@@ -1353,9 +1355,9 @@ type RelayOutput struct {
 }
 
 type RelayOutputSettings struct {
-	Mode      string        `bson:"mode" json:"mode"`
-	DelayTime time.Duration `bson:"delayTime" json:"delayTime"`
-	IdleState string        `bson:"idleState" json:"idleState"`
+	Mode      string       `bson:"mode" json:"mode"`
+	DelayTime TimeDuration `bson:"delayTime" json:"delayTime"`
+	IdleState string       `bson:"idleState" json:"idleState"`
 }
 
 type CertificateWithPrivateKey struct {
