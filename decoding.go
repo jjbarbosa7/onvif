@@ -1103,3 +1103,70 @@ func (dev *Device) DecodeStatus(data []byte) (*device.PTZStatus, error) {
 
 	return &ptzStatus, nil
 }
+
+func (dev *Device) DecodeSetPreset(data []byte) (*onvif.ReferenceToken, error) {
+	doc := etree.NewDocument()
+
+	if err := doc.ReadFromBytes(data); err != nil {
+		return nil, err
+	}
+
+	token := doc.FindElement("./Envelope/Body/SetPresetResponse/PresetToken")
+	if token == nil {
+		return nil, fmt.Errorf("PresetToken element not found")
+	}
+
+	presetToken := onvif.ReferenceToken(token.Text())
+
+	return &presetToken, nil
+}
+
+func (dev *Device) GetFault(data []byte) (bool, string, error) {
+	doc := etree.NewDocument()
+
+	if err := doc.ReadFromBytes(data); err != nil {
+		return false, "", err
+	}
+
+	fault := doc.FindElement("./Envelope/Body/Fault")
+	if fault == nil {
+		return false, "", nil
+	}
+
+	faultInfo := []string{}
+
+	code := fault.FindElement("Code")
+	if code != nil {
+		if value := code.FindElement("Value"); value != nil {
+			faultInfo = append(faultInfo, value.Text())
+		}
+		if subcode := code.FindElement("Subcode"); subcode != nil {
+			if value := subcode.FindElement("Value"); value != nil {
+				faultInfo = append(faultInfo, value.Text())
+			}
+			if subsubcode := subcode.FindElement("Subcode"); subsubcode != nil {
+				if value := subsubcode.FindElement("Value"); value != nil {
+					faultInfo = append(faultInfo, value.Text())
+				}
+			}
+		}
+	}
+
+	reason := fault.FindElement("Reason")
+	if reason != nil {
+		if text := reason.FindElement("Text"); text != nil {
+			faultInfo = append(faultInfo, text.Text())
+		}
+	}
+
+	text := reason.FindElement("Detail")
+	if text != nil {
+		faultInfo = append(faultInfo, text.Text())
+	}
+
+	if len(faultInfo) == 0 {
+		return false, "", nil
+	}
+
+	return true, strings.Join(faultInfo, ","), nil
+}
