@@ -23,7 +23,7 @@ type SystemDateTime struct {
 	TimeZone        string            `bson:"timeZone" json:"timeZone"`
 	UTCDateTime     time.Time         `bson:"utcDateTime" json:"utcDateTime"`
 	LocalDateTime   time.Time         `bson:"localDateTime" json:"localDateTime"`
-	Extension       map[string]string `bson:"extension" json:"extension"`
+	Extension       map[string]string `bson:"extension" json:"-"`
 }
 
 type IntRectangle struct {
@@ -57,13 +57,13 @@ type OSDConfiguration struct {
 	Position                      OSDPosConfiguration  `bson:"position" json:"position"`
 	TextString                    OSDTextConfiguration `bson:"textString" json:"textString"`
 	Image                         OSDImgConfiguration  `bson:"image" json:"image"`
-	Extension                     map[string]string    `bson:"extension" json:"extension"`
+	Extension                     map[string]string    `bson:"extension" json:"-"`
 }
 
 type OSDPosConfiguration struct {
 	Type      string            `bson:"type" json:"type"`
 	Pos       Vector            `bson:"pos" json:"pos"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type Vector struct {
@@ -80,7 +80,7 @@ type OSDTextConfiguration struct {
 	FontColor        OSDColor          `bson:"fontColor" json:"fontColor"`
 	BackgroundColor  OSDColor          `bson:"backgroundColor" json:"backgroundColor"`
 	PlainText        string            `bson:"plainText" json:"plainText"`
-	Extension        map[string]string `bson:"extension" json:"extension"`
+	Extension        map[string]string `bson:"extension" json:"-"`
 }
 
 type OSDColor struct {
@@ -97,7 +97,7 @@ type Color struct {
 
 type OSDImgConfiguration struct {
 	ImgPath   string            `bson:"imgPath" json:"imgPath"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type VideoSource struct {
@@ -124,7 +124,7 @@ type ImagingSettings struct {
 	Sharpness             float64               `bson:"sharpness" json:"sharpness"`
 	WideDynamicRange      WideDynamicRange      `bson:"wideDynamicRange" json:"wideDynamicRange"`
 	WhiteBalance          WhiteBalance          `bson:"whiteBalance" json:"whiteBalance"`
-	Extension             map[string]string     `bson:"extension" json:"extension"`
+	Extension             map[string]string     `bson:"extension" json:"-"`
 }
 
 type BacklightCompensation struct {
@@ -174,7 +174,7 @@ type WhiteBalance struct {
 
 type VideoSourceExtension struct {
 	Imaging   ImagingSettings20 `bson:"imaging" json:"imaging"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type ImagingSettings20 struct {
@@ -215,7 +215,7 @@ type FocusConfiguration20 struct {
 	DefaultSpeed  float64           `bson:"defaultSpeed" json:"defaultSpeed"`
 	NearLimit     float64           `bson:"nearLimit" json:"nearLimit"`
 	FarLimit      float64           `bson:"farLimit" json:"farLimit"`
-	Extension     map[string]string `bson:"extension" json:"extension"`
+	Extension     map[string]string `bson:"extension" json:"-"`
 }
 
 type WideDynamicRange20 struct {
@@ -227,7 +227,7 @@ type WhiteBalance20 struct {
 	Mode      string            `bson:"mode" json:"mode"`
 	CrGain    float64           `bson:"crGain" json:"crGain"`
 	CbGain    float64           `bson:"cbGain" json:"cbGain"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type ImagingSettingsExtension20 struct {
@@ -238,7 +238,7 @@ type ImagingSettingsExtension20 struct {
 type ImageStabilization struct {
 	Mode      string            `bson:"mode" json:"mode"`
 	Level     float64           `bson:"level" json:"level"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type ImagingSettingsExtension202 struct {
@@ -250,26 +250,26 @@ type IrCutFilterAutoAdjustment struct {
 	BoundaryType   string            `bson:"boundaryType" json:"boundaryType"`
 	BoundaryOffset float64           `bson:"boundaryOffset" json:"boundaryOffset"`
 	ResponseTime   TimeDuration      `bson:"responseTime" json:"responseTime"`
-	Extension      map[string]string `bson:"extension" json:"extension"`
+	Extension      map[string]string `bson:"extension" json:"-"`
 }
 
 type ImagingSettingsExtension203 struct {
 	ToneCompensation ToneCompensation  `bson:"toneCompensation" json:"toneCompensation"`
 	Defogging        Defogging         `bson:"defogging" json:"defogging"`
 	NoiseReduction   NoiseReduction    `bson:"noiseReduction" json:"noiseReduction"`
-	Extension        map[string]string `bson:"extension" json:"extension"`
+	Extension        map[string]string `bson:"extension" json:"-"`
 }
 
 type ToneCompensation struct {
 	Mode      string            `bson:"mode" json:"mode"`
 	Level     float64           `bson:"level" json:"level"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type Defogging struct {
 	Mode      string            `bson:"mode" json:"mode"`
 	Level     float64           `bson:"level" json:"level"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type NoiseReduction struct {
@@ -321,7 +321,7 @@ type VideoSourceConfigurationExtension struct {
 type Rotate struct {
 	Mode      string            `bson:"mode" json:"mode"`
 	Degree    int               `bson:"degree" json:"degree"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type VideoSourceConfigurationExtension2 struct {
@@ -415,12 +415,12 @@ type VideoAnalyticsConfiguration struct {
 
 type AnalyticsEngineConfiguration struct {
 	AnalyticsModule Config            `bson:"analyticsModule" json:"analyticsModule"`
-	Extension       map[string]string `bson:"extension" json:"extension"`
+	Extension       map[string]string `bson:"extension" json:"-"`
 }
 
 type RuleEngineConfiguration struct {
 	Rule      Config            `bson:"rule" json:"rule"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type Config struct {
@@ -437,7 +437,7 @@ type QName struct {
 type ItemList struct {
 	SimpleItem  SimpleItem        `bson:"simpleItem" json:"simpleItem"`
 	ElementItem ElementItem       `bson:"elementItem" json:"elementItem"`
-	Extension   map[string]string `bson:"extension" json:"extension"`
+	Extension   map[string]string `bson:"extension" json:"-"`
 }
 
 type SimpleItem struct {
@@ -504,13 +504,13 @@ type Space1DDescription struct {
 
 type PTZConfigurationExtension struct {
 	PTControlDirection PTControlDirection `bson:"ptControlDirection" json:"ptControlDirection"`
-	Extension          map[string]string  `bson:"extension" json:"extension"`
+	Extension          map[string]string  `bson:"extension" json:"-"`
 }
 
 type PTControlDirection struct {
 	EFlip     EFlip             `bson:"eFlip" json:"eFlip"`
 	Reverse   Reverse           `bson:"reverse" json:"reverse"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type EFlip struct {
@@ -527,12 +527,12 @@ type MetadataConfiguration struct {
 	ConfigurationEntity
 	CompressionType              string                       `bson:"compressionType" json:"compressionType"`
 	PTZStatus                    PTZFilter                    `bson:"ptzStatus" json:"ptzStatus"`
-	Events                       EventSubscription            `bson:"events" json:"events"`
+	Events                       EventSubscription            `bson:"events" json:"-"`
 	Analytics                    bool                         `bson:"analytics" json:"analytics"`
 	Multicast                    MulticastConfiguration       `bson:"multicast" json:"multicast"`
 	SessionTimeout               TimeDuration                 `bson:"sessionTimeout" json:"sessionTimeout"`
 	AnalyticsEngineConfiguration AnalyticsEngineConfiguration `bson:"analyticsEngineConfiguration" json:"analyticsEngineConfiguration"`
-	Extension                    map[string]string            `bson:"extension" json:"extension"`
+	Extension                    map[string]string            `bson:"extension" json:"-"`
 }
 
 type PTZFilter struct {
@@ -541,14 +541,14 @@ type PTZFilter struct {
 }
 
 type EventSubscription struct {
-	Filter             map[string]string `bson:"filter" json:"filter"`
-	SubscriptionPolicy map[string]string `bson:"subscriptionPolicy" json:"subscriptionPolicy"`
+	Filter             map[string]string `bson:"filter" json:"-"`
+	SubscriptionPolicy map[string]string `bson:"subscriptionPolicy" json:"-"`
 }
 
 type ProfileExtension struct {
 	AudioOutputConfiguration  AudioOutputConfiguration  `bson:"audioOutputConfiguration" json:"audioOutputConfiguration"`
 	AudioDecoderConfiguration AudioDecoderConfiguration `bson:"audioDecoderConfiguration" json:"audioDecoderConfiguration"`
-	Extension                 map[string]string         `bson:"extension" json:"extension"`
+	Extension                 map[string]string         `bson:"extension" json:"-"`
 }
 
 type AudioOutputConfiguration struct {
@@ -577,7 +577,7 @@ type VideoSourceConfigurationOptionsExtension struct {
 type RotateOptions struct {
 	Mode       string            `bson:"mode" json:"mode"`
 	DegreeList IntList           `bson:"degreeList" json:"degreeList"`
-	Extension  map[string]string `bson:"extension" json:"extension"`
+	Extension  map[string]string `bson:"extension" json:"-"`
 }
 
 type IntList struct {
@@ -622,7 +622,7 @@ type VideoEncoderOptionsExtension struct {
 	JPEG      JpegOptions2      `bson:"jpeg" json:"jpeg"`
 	MPEG4     Mpeg4Options2     `bson:"mpeg4" json:"mpeg4"`
 	H264      H264Options2      `bson:"h264" json:"h264"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type JpegOptions2 struct {
@@ -642,7 +642,7 @@ type H264Options2 struct {
 
 type AudioSourceConfigurationOptions struct {
 	InputTokensAvailable string            `bson:"inputTokensAvailable" json:"inputTokensAvailable"`
-	Extension            map[string]string `bson:"extension" json:"extension"`
+	Extension            map[string]string `bson:"extension" json:"-"`
 }
 
 type AudioEncoderConfigurationOptions struct {
@@ -665,12 +665,12 @@ type PTZStatusFilterOptions struct {
 	ZoomStatusSupported      bool              `bson:"zoomStatusSupported" json:"zoomStatusSupported"`
 	PanTiltPositionSupported bool              `bson:"panTiltPositionSupported" json:"panTiltPositionSupported"`
 	ZoomPositionSupported    bool              `bson:"zoomPositionSupported" json:"zoomPositionSupported"`
-	Extension                map[string]string `bson:"extension" json:"extension"`
+	Extension                map[string]string `bson:"extension" json:"-"`
 }
 
 type MetadataConfigurationOptionsExtension struct {
 	CompressionType string            `bson:"compressionType" json:"compressionType"`
-	Extension       map[string]string `bson:"extension" json:"extension"`
+	Extension       map[string]string `bson:"extension" json:"-"`
 }
 
 type AudioOutputConfigurationOptions struct {
@@ -683,7 +683,7 @@ type AudioDecoderConfigurationOptions struct {
 	AACDecOptions  AACDecOptions     `bson:"aacDecOptions" json:"aacDecOptions"`
 	G711DecOptions G711DecOptions    `bson:"g711DecOptions" json:"g711DecOptions"`
 	G726DecOptions G726DecOptions    `bson:"g726DecOptions" json:"g726DecOptions"`
-	Extension      map[string]string `bson:"extension" json:"extension"`
+	Extension      map[string]string `bson:"extension" json:"-"`
 }
 
 type AACDecOptions struct {
@@ -722,14 +722,14 @@ type VideoSourceMode struct {
 	Enabled       bool              `bson:"enabled" json:"enabled"`
 	MaxFramerate  float64           `bson:"maxFramerate" json:"maxFramerate"`
 	MaxResolution VideoResolution   `bson:"maxResolution" json:"maxResolution"`
-	Encodings     EncodingTypes     `bson:"encodings" json:"encodings"`
+	Encodings     EncodingTypes     `bson:"encodings" json:"-"`
 	Reboot        bool              `bson:"reboot" json:"reboot"`
 	Description   Description       `bson:"description" json:"description"`
-	Extension     map[string]string `bson:"extension" json:"extension"`
+	Extension     map[string]string `bson:"extension" json:"-"`
 }
 
 type EncodingTypes struct {
-	EncodingTypes map[string]string `bson:"encodingTypes" json:"encodingTypes"`
+	EncodingTypes map[string]string `bson:"encodingTypes" json:"-"`
 }
 
 type Description struct {
@@ -742,7 +742,7 @@ type OSDConfigurationOptions struct {
 	PositionOption      string              `bson:"positionOption" json:"positionOption"`
 	TextOption          OSDTextOptions      `bson:"textOption" json:"textOption"`
 	ImageOption         OSDImgOptions       `bson:"imageOption" json:"imageOption"`
-	Extension           map[string]string   `bson:"extension" json:"extension"`
+	Extension           map[string]string   `bson:"extension" json:"-"`
 }
 
 type MaximumNumberOfOSDs struct {
@@ -761,13 +761,13 @@ type OSDTextOptions struct {
 	TimeFormat      string            `bson:"timeFormat" json:"timeFormat"`
 	FontColor       OSDColorOptions   `bson:"fontColor" json:"fontColor"`
 	BackgroundColor OSDColorOptions   `bson:"backgroundColor" json:"backgroundColor"`
-	Extension       map[string]string `bson:"extension" json:"extension"`
+	Extension       map[string]string `bson:"extension" json:"-"`
 }
 
 type OSDColorOptions struct {
 	Color       ColorOptions      `bson:"color" json:"color"`
 	Transparent IntRange          `bson:"transparent" json:"transparent"`
-	Extension   map[string]string `bson:"extension" json:"extension"`
+	Extension   map[string]string `bson:"extension" json:"-"`
 }
 
 type ColorOptions struct {
@@ -783,16 +783,16 @@ type ColorspaceRange struct {
 }
 
 type OSDImgOptions struct {
-	FormatsSupported StringAttrList    `bson:"formatsSupported" json:"formatsSupported"`
+	FormatsSupported StringAttrList    `bson:"formatsSupported" json:"-"`
 	MaxSize          int               `bson:"maxSize" json:"maxSize"`
 	MaxWidth         int               `bson:"maxWidth" json:"maxWidth"`
 	MaxHeight        int               `bson:"maxHeight" json:"maxHeight"`
 	ImagePath        string            `bson:"imagePath" json:"imagePath"`
-	Extension        map[string]string `bson:"extension" json:"extension"`
+	Extension        map[string]string `bson:"extension" json:"-"`
 }
 
 type StringAttrList struct {
-	AttrList map[string]string `bson:"attrList" json:"attrList"`
+	AttrList map[string]string `bson:"attrList" json:"-"`
 }
 
 // PTZ
@@ -805,7 +805,7 @@ type PTZNode struct {
 	SupportedPTZSpaces     PTZSpaces         `bson:"supportedPTZSpaces" json:"supportedPTZSpaces"`
 	MaximumNumberOfPresets int               `bson:"maximumNumberOfPresets" json:"maximumNumberOfPresets"`
 	HomeSupported          bool              `bson:"homeSupported" json:"homeSupported"`
-	AuxiliaryCommands      map[string]string `bson:"auxiliaryCommands" json:"auxiliaryCommands"`
+	AuxiliaryCommands      map[string]string `bson:"auxiliaryCommands" json:"-"`
 	Extension              PTZNodeExtension  `bson:"extension" json:"extension"`
 }
 
@@ -818,18 +818,18 @@ type PTZSpaces struct {
 	ContinuousZoomVelocitySpace     Space1DDescription `bson:"continuousZoomVelocitySpace" json:"continuousZoomVelocitySpace"`
 	PanTiltSpeedSpace               Space1DDescription `bson:"panTiltSpeedSpace" json:"panTiltSpeedSpace"`
 	ZoomSpeedSpace                  Space1DDescription `bson:"zoomSpeedSpace" json:"zoomSpeedSpace"`
-	Extension                       map[string]string  `bson:"extension" json:"extension"`
+	Extension                       map[string]string  `bson:"extension" json:"-"`
 }
 
 type PTZNodeExtension struct {
 	SupportedPresetTour PTZPresetTourSupported `bson:"supportedPresetTour" json:"supportedPresetTour"`
-	Extension           map[string]string      `bson:"extension" json:"extension"`
+	Extension           map[string]string      `bson:"extension" json:"-"`
 }
 
 type PTZPresetTourSupported struct {
 	MaximumNumberOfPresetTours int               `bson:"maximumNumberOfPresetTours" json:"maximumNumberOfPresetTours"`
 	PTZPresetTourOperation     string            `bson:"ptzPresetTourOperation" json:"ptzPresetTourOperation"`
-	Extension                  map[string]string `bson:"extension" json:"extension"`
+	Extension                  map[string]string `bson:"extension" json:"-"`
 }
 
 type PTZConfigurationOptions struct {
@@ -837,7 +837,7 @@ type PTZConfigurationOptions struct {
 	Spaces             PTZSpaces                 `bson:"spaces" json:"spaces"`
 	PTZTimeout         DurationRange             `bson:"ptzTimeout" json:"ptzTimeout"`
 	PTControlDirection PTControlDirectionOptions `bson:"ptControlDirection" json:"ptControlDirection"`
-	Extension          map[string]string         `bson:"extension" json:"extension"`
+	Extension          map[string]string         `bson:"extension" json:"-"`
 }
 
 type IntAttrList struct {
@@ -852,17 +852,17 @@ type DurationRange struct {
 type PTControlDirectionOptions struct {
 	EFlip     EFlipOptions      `bson:"eFlip" json:"eFlip"`
 	Reverse   ReverseOptions    `bson:"reverse" json:"reverse"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type EFlipOptions struct {
 	Mode      EFlipMode         `bson:"mode" json:"mode"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type ReverseOptions struct {
 	Mode      string            `bson:"mode" json:"mode"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type PTZPreset struct {
@@ -904,27 +904,27 @@ type PresetTour struct {
 	AutoStart         bool                           `bson:"autoStart" json:"autoStart"`
 	StartingCondition PTZPresetTourStartingCondition `bson:"startingCondition" json:"startingCondition"`
 	TourSpot          PTZPresetTourSpot              `bson:"tourSpot" json:"tourSpot"`
-	Extension         map[string]string              `bson:"extension" json:"extension"`
+	Extension         map[string]string              `bson:"extension" json:"-"`
 }
 
 type PTZPresetTourStatus struct {
 	State           string            `bson:"state" json:"state"`
 	CurrentTourSpot PTZPresetTourSpot `bson:"currentTourSpot" json:"currentTourSpot"`
-	Extension       map[string]string `bson:"extension" json:"extension"`
+	Extension       map[string]string `bson:"extension" json:"-"`
 }
 
 type PTZPresetTourSpot struct {
 	PresetDetail PTZPresetTourPresetDetail `bson:"presetDetail" json:"presetDetail"`
 	Speed        PTZSpeed                  `bson:"speed" json:"speed"`
 	StayTime     TimeDuration              `bson:"stayTime" json:"stayTime"`
-	Extension    map[string]string         `bson:"extension" json:"extension"`
+	Extension    map[string]string         `bson:"extension" json:"-"`
 }
 
 type PTZPresetTourPresetDetail struct {
 	PresetToken   string            `bson:"presetToken" json:"presetToken"`
 	Home          bool              `bson:"home" json:"home"`
 	PTZPosition   PTZVector         `bson:"ptzPosition" json:"ptzPosition"`
-	TypeExtension map[string]string `bson:"typeExtension" json:"typeExtension"`
+	TypeExtension map[string]string `bson:"typeExtension" json:"-"`
 }
 
 type PTZPresetTourStartingCondition struct {
@@ -932,7 +932,7 @@ type PTZPresetTourStartingCondition struct {
 	RecurringTime     int               `bson:"recurringTime" json:"recurringTime"`
 	RecurringDuration TimeDuration      `bson:"recurringDuration" json:"recurringDuration"`
 	Direction         string            `bson:"direction" json:"direction"`
-	Extension         map[string]string `bson:"extension" json:"extension"`
+	Extension         map[string]string `bson:"extension" json:"-"`
 }
 
 type PTZPresetTourOptions struct {
@@ -945,7 +945,7 @@ type PTZPresetTourStartingConditionOptions struct {
 	RecurringTime     IntRange          `bson:"recurringTime" json:"recurringTime"`
 	RecurringDuration DurationRange     `bson:"recurringDuration" json:"recurringDuration"`
 	Direction         string            `bson:"direction" json:"direction"`
-	Extension         map[string]string `bson:"extension" json:"extension"`
+	Extension         map[string]string `bson:"extension" json:"-"`
 }
 
 type PTZPresetTourSpotOptions struct {
@@ -958,7 +958,7 @@ type PTZPresetTourPresetDetailOptions struct {
 	Home                 bool               `bson:"home" json:"home"`
 	PanTiltPositionSpace Space2DDescription `bson:"panTiltPositionSpace" json:"panTiltPositionSpace"`
 	ZoomPositionSpace    Space1DDescription `bson:"zoomPositionSpace" json:"zoomPositionSpace"`
-	Extension            map[string]string  `bson:"extension" json:"extension"`
+	Extension            map[string]string  `bson:"extension" json:"-"`
 }
 
 // Capabilities of device
@@ -986,7 +986,7 @@ type DeviceCapabilities struct {
 	System    SystemCapabilities   `bson:"system" json:"system"`
 	IO        IOCapabilities       `bson:"io" json:"io"`
 	Security  SecurityCapabilities `bson:"security" json:"security"`
-	Extension map[string]string    `bson:"extension" json:"extension"`
+	Extension map[string]string    `bson:"extension" json:"-"`
 }
 
 // NetworkCapabilities Check
@@ -1001,7 +1001,7 @@ type NetworkCapabilities struct {
 // NetworkCapabilitiesExtension Check
 type NetworkCapabilitiesExtension struct {
 	Dot11Configuration bool              `bson:"dot11Configuration" json:"dot11Configuration"`
-	Extension          map[string]string `bson:"extension" json:"extension"`
+	Extension          map[string]string `bson:"extension" json:"-"`
 }
 
 // SystemCapabilities check
@@ -1013,7 +1013,7 @@ type SystemCapabilities struct {
 	SystemLogging     bool              `bson:"systemLogging" json:"systemLogging"`
 	FirmwareUpgrade   bool              `bson:"firmwareUpgrade" json:"firmwareUpgrade"`
 	SupportedVersions OnvifVersion      `bson:"supportedVersions" json:"supportedVersions"`
-	Extension         map[string]string `bson:"extension" json:"extension"`
+	Extension         map[string]string `bson:"extension" json:"-"`
 }
 
 type SystemCapabilitiesExtension struct {
@@ -1021,7 +1021,7 @@ type SystemCapabilitiesExtension struct {
 	HttpSystemBackup       bool              `bson:"httpSystemBackup" json:"httpSystemBackup"`
 	HttpSystemLogging      bool              `bson:"httpSystemLogging" json:"httpSystemLogging"`
 	HttpSupportInformation bool              `bson:"httpSupportInformation" json:"httpSupportInformation"`
-	Extension              map[string]string `bson:"extension" json:"extension"`
+	Extension              map[string]string `bson:"extension" json:"-"`
 }
 
 type IOCapabilities struct {
@@ -1033,7 +1033,7 @@ type IOCapabilities struct {
 type IOCapabilitiesExtension struct {
 	Auxiliary         bool              `bson:"auxiliary" json:"auxiliary"`
 	AuxiliaryCommands string            `bson:"auxiliaryCommands" json:"auxiliaryCommands"`
-	Extension         map[string]string `bson:"extension" json:"extension"`
+	Extension         map[string]string `bson:"extension" json:"-"`
 }
 
 type SecurityCapabilities struct {
@@ -1080,7 +1080,7 @@ type RealTimeStreamingCapabilities struct {
 	RTPMulticast bool              `bson:"rtpMulticast" json:"rtpMulticast"`
 	RTP_TCP      bool              `bson:"rtp_tcp" json:"rtp_tcp"`
 	RTP_RTSP_TCP bool              `bson:"rtp_rtsp_tcp" json:"rtp_rtsp_tcp"`
-	Extension    map[string]string `bson:"extension" json:"extension"`
+	Extension    map[string]string `bson:"extension" json:"-"`
 }
 
 type MediaCapabilitiesExtension struct {
@@ -1103,7 +1103,7 @@ type CapabilitiesExtension struct {
 	Replay          ReplayCapabilities          `bson:"replay" json:"replay"`
 	Receiver        ReceiverCapabilities        `bson:"receiver" json:"receiver"`
 	AnalyticsDevice AnalyticsDeviceCapabilities `bson:"analyticsDevice" json:"analyticsDevice"`
-	Extensions      map[string]string           `bson:"extensions" json:"extensions"`
+	Extensions      map[string]string           `bson:"extensions" json:"-"`
 }
 type DeviceIOCapabilities struct {
 	XAddr        string `bson:"xAddr" json:"xAddr"`
@@ -1149,13 +1149,13 @@ type ReceiverCapabilities struct {
 type AnalyticsDeviceCapabilities struct {
 	XAddr       string            `bson:"xAddr" json:"xAddr"`
 	RuleSupport bool              `bson:"ruleSupport" json:"ruleSupport"`
-	Extension   map[string]string `bson:"extension" json:"extension"`
+	Extension   map[string]string `bson:"extension" json:"-"`
 }
 
 type HostnameInformation struct {
 	FromDHCP  bool              `bson:"fromDHCP" json:"fromDHCP"`
 	Name      string            `bson:"name" json:"name"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type DNSInformation struct {
@@ -1163,21 +1163,21 @@ type DNSInformation struct {
 	SearchDomain string            `bson:"searchDomain" json:"searchDomain"`
 	DNSFromDHCP  IPAddress         `bson:"dnsFromDHCP" json:"dnsFromDHCP"`
 	DNSManual    IPAddress         `bson:"dnsManual" json:"dnsManual"`
-	Extension    map[string]string `bson:"extension" json:"extension"`
+	Extension    map[string]string `bson:"extension" json:"-"`
 }
 
 type NTPInformation struct {
 	FromDHCP    bool              `bson:"fromDHCP" json:"fromDHCP"`
 	NTPFromDHCP string            `bson:"ntpFromDHCP" json:"ntpFromDHCP"`
 	NTPManual   string            `bson:"ntpManual" json:"ntpManual"`
-	Extension   map[string]string `bson:"extension" json:"extension"`
+	Extension   map[string]string `bson:"extension" json:"-"`
 }
 
 type DynamicDNSInformation struct {
 	Type      string            `bson:"type" json:"type"`
 	Name      string            `bson:"name" json:"name"`
 	TTL       TimeDuration      `bson:"ttl" json:"ttl"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type NetworkInterface struct {
@@ -1212,7 +1212,7 @@ type NetworkInterfaceExtension struct {
 	InterfaceType int                `bson:"interfaceType" json:"interfaceType"`
 	Dot3          string             `bson:"dot3" json:"dot3"`
 	Dot11         Dot11Configuration `bson:"dot11" json:"dot11"`
-	Extension     map[string]string  `bson:"extension" json:"extension"`
+	Extension     map[string]string  `bson:"extension" json:"-"`
 }
 
 type Dot11Configuration struct {
@@ -1228,13 +1228,13 @@ type Dot11SecurityConfiguration struct {
 	Algorithm string            `bson:"algorithm" json:"algorithm"`
 	PSK       Dot11PSKSet       `bson:"psk" json:"psk"`
 	Dot1X     string            `bson:"dot1x" json:"dot1x"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type Dot11PSKSet struct {
 	Key        string            `bson:"key" json:"key"`
 	Passphrase string            `bson:"passphrase" json:"passphrase"`
-	Extension  map[string]string `bson:"extension" json:"extension"`
+	Extension  map[string]string `bson:"extension" json:"-"`
 }
 
 type IPv6NetworkInterface struct {
@@ -1249,7 +1249,7 @@ type IPv6Configuration struct {
 	LinkLocal          PrefixedIPv6Address `bson:"linkLocal" json:"linkLocal"`
 	FromDHCP           PrefixedIPv6Address `bson:"fromDHCP" json:"fromDHCP"`
 	FromRA             PrefixedIPv6Address `bson:"fromRA" json:"fromRA"`
-	Extension          map[string]string   `bson:"extension" json:"extension"`
+	Extension          map[string]string   `bson:"extension" json:"-"`
 }
 
 type PrefixedIPv6Address struct {
@@ -1286,7 +1286,7 @@ type NetworkInterfaceSetConfiguration struct {
 type NetworkInterfaceSetConfigurationExtension struct {
 	Dot3      string             `bson:"dot3" json:"dot3"`
 	Dot11     Dot11Configuration `bson:"dot11" json:"dot11"`
-	Extension map[string]string  `bson:"extension" json:"extension"`
+	Extension map[string]string  `bson:"extension" json:"-"`
 }
 
 type IPv6NetworkInterfaceSetConfiguration struct {
@@ -1305,7 +1305,7 @@ type NetworkProtocol struct {
 	Name      string            `bson:"name" json:"name"`
 	Enabled   bool              `bson:"enabled" json:"enabled"`
 	Port      int               `bson:"port" json:"port"`
-	Extension map[string]string `bson:"extension" json:"extension"`
+	Extension map[string]string `bson:"extension" json:"-"`
 }
 
 type NetworkGateway struct {
@@ -1322,14 +1322,14 @@ type NetworkZeroConfiguration struct {
 
 type NetworkZeroConfigurationExtension struct {
 	Additional *NetworkZeroConfiguration `bson:"additional" json:"additional"`
-	Extension  map[string]string         `bson:"extension" json:"extension"`
+	Extension  map[string]string         `bson:"extension" json:"-"`
 }
 
 type IPAddressFilter struct {
 	Type        string              `bson:"type" json:"type"`
 	IPv4Address PrefixedIPv4Address `bson:"ipv4Address" json:"ipv4Address"`
 	IPv6Address PrefixedIPv6Address `bson:"ipv6Address" json:"ipv6Address"`
-	Extension   map[string]string   `bson:"extension" json:"extension"`
+	Extension   map[string]string   `bson:"extension" json:"-"`
 }
 
 type BinaryData struct {
@@ -1375,7 +1375,7 @@ type CertificateInformation struct {
 	SerialNum          string            `bson:"serialNum" json:"serialNum"`
 	SignatureAlgorithm string            `bson:"signatureAlgorithm" json:"signatureAlgorithm"`
 	Validity           DateTimeRange     `bson:"validity" json:"validity"`
-	Extension          map[string]string `bson:"extension" json:"extension"`
+	Extension          map[string]string `bson:"extension" json:"-"`
 }
 
 type DateTimeRange struct {
@@ -1395,13 +1395,13 @@ type Dot1XConfiguration struct {
 	EAPMethod               int                    `bson:"eapMethod" json:"eapMethod"`
 	CACertificateID         string                 `bson:"caCertificateID" json:"caCertificateID"`
 	EAPMethodConfiguration  EAPMethodConfiguration `bson:"eapMethodConfiguration" json:"eapMethodConfiguration"`
-	Extension               map[string]string      `bson:"extension" json:"extension"`
+	Extension               map[string]string      `bson:"extension" json:"-"`
 }
 
 type EAPMethodConfiguration struct {
 	TLSConfiguration TLSConfiguration  `bson:"tlsConfiguration" json:"tlsConfiguration"`
 	Password         string            `bson:"password" json:"password"`
-	Extension        map[string]string `bson:"extension" json:"extension"`
+	Extension        map[string]string `bson:"extension" json:"-"`
 }
 
 type TLSConfiguration struct {
@@ -1431,7 +1431,7 @@ type Dot11AvailableNetworks struct {
 	PairCipher            string            `bson:"pairCipher" json:"pairCipher"`
 	GroupCipher           string            `bson:"groupCipher" json:"groupCipher"`
 	SignalStrength        string            `bson:"signalStrength" json:"signalStrength"`
-	Extension             map[string]string `bson:"extension" json:"extension"`
+	Extension             map[string]string `bson:"extension" json:"-"`
 }
 
 type SystemLogUriList struct {
