@@ -870,7 +870,6 @@ type PTZPreset struct {
 	Name        string    `bson:"name" json:"name"`
 	PTZPosition PTZVector `bson:"ptzPosition" json:"ptzPosition"`
 }
-
 type PTZVector struct {
 	PanTilt Vector2D `bson:"panTilt" json:"panTilt"`
 	Zoom    Vector1D `bson:"zoom" json:"zoom"`
@@ -886,7 +885,6 @@ type PTZMoveStatus struct {
 	PanTilt MoveStatus `bson:"panTilt" json:"panTilt"`
 	Zoom    MoveStatus `bson:"zoom" json:"zoom"`
 }
-
 type MoveStatus struct {
 	Status string `bson:"status" json:"status"`
 }
