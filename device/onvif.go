@@ -2,8 +2,6 @@ package device
 
 import (
 	"time"
-
-	"github.com/jjbarbosa7/onvif/xsd/onvif"
 )
 
 // Translation of onvif types from wsdl to go
@@ -11,7 +9,7 @@ import (
 type TimeDuration string
 
 type DeviceEntity struct {
-	Token onvif.ReferenceToken `bson:"token" json:"token"`
+	Token string `bson:"token" json:"token"`
 }
 
 type OnvifVersion struct {
@@ -54,7 +52,7 @@ type FloatRange struct {
 
 type OSDConfiguration struct {
 	DeviceEntity
-	VideoSourceConfigurationToken onvif.ReferenceToken `bson:"videoSourceConfigurationToken" json:"videoSourceConfigurationToken"`
+	VideoSourceConfigurationToken string               `bson:"videoSourceConfigurationToken" json:"videoSourceConfigurationToken"`
 	Type                          string               `bson:"type" json:"type"`
 	Position                      OSDPosConfiguration  `bson:"position" json:"position"`
 	TextString                    OSDTextConfiguration `bson:"textString" json:"textString"`
@@ -288,7 +286,7 @@ type AudioOutput struct {
 }
 
 type Profile struct {
-	Token                       onvif.ReferenceToken        `bson:"token" json:"token"`
+	Token                       string                      `bson:"token" json:"token"`
 	Fixed                       bool                        `bson:"fixed" json:"fixed"`
 	Name                        string                      `bson:"name" json:"name"`
 	VideoSourceConfiguration    VideoSourceConfiguration    `bson:"videoSourceConfiguration" json:"videoSourceConfiguration"`
@@ -304,15 +302,15 @@ type Profile struct {
 type VideoSourceConfiguration struct {
 	ConfigurationEntity
 	ViewMode    string                            `bson:"viewMode" json:"viewMode"`
-	SourceToken onvif.ReferenceToken              `bson:"sourceToken" json:"sourceToken"`
+	SourceToken string                            `bson:"sourceToken" json:"sourceToken"`
 	Bounds      IntRectangle                      `bson:"bounds" json:"bounds"`
 	Extension   VideoSourceConfigurationExtension `bson:"extension" json:"extension"`
 }
 
 type ConfigurationEntity struct {
-	Token    onvif.ReferenceToken `bson:"token" json:"token"`
-	Name     string               `bson:"name" json:"name"`
-	UseCount int                  `bson:"useCount" json:"useCount"`
+	Token    string `bson:"token" json:"token"`
+	Name     string `bson:"name" json:"name"`
+	UseCount int    `bson:"useCount" json:"useCount"`
 }
 
 type VideoSourceConfigurationExtension struct {
@@ -356,7 +354,7 @@ type SceneOrientation struct {
 
 type AudioSourceConfiguration struct {
 	ConfigurationEntity
-	SourceToken onvif.ReferenceToken `bson:"sourceToken" json:"sourceToken"`
+	SourceToken string `bson:"sourceToken" json:"sourceToken"`
 }
 
 type VideoEncoderConfiguration struct {
@@ -456,7 +454,7 @@ type PTZConfiguration struct {
 	MoveRamp                               int                       `bson:"moveRamp" json:"moveRamp"`
 	PresetRamp                             int                       `bson:"presetRamp" json:"presetRamp"`
 	PresetTourRamp                         int                       `bson:"presetTourRamp" json:"presetTourRamp"`
-	NodeToken                              onvif.ReferenceToken      `bson:"nodeToken" json:"nodeToken"`
+	NodeToken                              string                    `bson:"nodeToken" json:"nodeToken"`
 	DefaultAbsolutePantTiltPositionSpace   string                    `bson:"defaultAbsolutePantTiltPositionSpace" json:"defaultAbsolutePantTiltPositionSpace"`
 	DefaultAbsoluteZoomPositionSpace       string                    `bson:"defaultAbsoluteZoomPositionSpace" json:"defaultAbsoluteZoomPositionSpace"`
 	DefaultRelativePanTiltTranslationSpace string                    `bson:"defaultRelativePanTiltTranslationSpace" json:"defaultRelativePanTiltTranslationSpace"`
@@ -555,9 +553,9 @@ type ProfileExtension struct {
 
 type AudioOutputConfiguration struct {
 	ConfigurationEntity
-	OutputToken onvif.ReferenceToken `bson:"outputToken" json:"outputToken"`
-	SendPrimacy string               `bson:"sendPrimacy" json:"sendPrimacy"`
-	OutputLevel int                  `bson:"outputLevel" json:"outputLevel"`
+	OutputToken string `bson:"outputToken" json:"outputToken"`
+	SendPrimacy string `bson:"sendPrimacy" json:"sendPrimacy"`
+	OutputLevel int    `bson:"outputLevel" json:"outputLevel"`
 }
 
 type AudioDecoderConfiguration struct {
@@ -567,7 +565,7 @@ type AudioDecoderConfiguration struct {
 type VideoSourceConfigurationOptions struct {
 	MaximumNumberOfProfiles    int                                      `bson:"maximumNumberOfProfiles" json:"maximumNumberOfProfiles"`
 	BoundsRange                IntRectangleRange                        `bson:"boundsRange" json:"boundsRange"`
-	VideoSourceTokensAvailable onvif.ReferenceToken                     `bson:"videoSourceTokensAvailable" json:"videoSourceTokensAvailable"`
+	VideoSourceTokensAvailable string                                   `bson:"videoSourceTokensAvailable" json:"videoSourceTokensAvailable"`
 	Extension                  VideoSourceConfigurationOptionsExtension `bson:"extension" json:"extension"`
 }
 
@@ -643,8 +641,8 @@ type H264Options2 struct {
 }
 
 type AudioSourceConfigurationOptions struct {
-	InputTokensAvailable onvif.ReferenceToken `bson:"inputTokensAvailable" json:"inputTokensAvailable"`
-	Extension            map[string]string    `bson:"extension" json:"extension"`
+	InputTokensAvailable string            `bson:"inputTokensAvailable" json:"inputTokensAvailable"`
+	Extension            map[string]string `bson:"extension" json:"extension"`
 }
 
 type AudioEncoderConfigurationOptions struct {
@@ -676,9 +674,9 @@ type MetadataConfigurationOptionsExtension struct {
 }
 
 type AudioOutputConfigurationOptions struct {
-	OutputTokensAvailable onvif.ReferenceToken `bson:"outputTokensAvailable" json:"outputTokensAvailable"`
-	SendPrimacyOptions    string               `bson:"sendPrimacyOptions" json:"sendPrimacyOptions"`
-	OutputLevelRange      IntRange             `bson:"outputLevelRange" json:"outputLevelRange"`
+	OutputTokensAvailable string   `bson:"outputTokensAvailable" json:"outputTokensAvailable"`
+	SendPrimacyOptions    string   `bson:"sendPrimacyOptions" json:"sendPrimacyOptions"`
+	OutputLevelRange      IntRange `bson:"outputLevelRange" json:"outputLevelRange"`
 }
 
 type AudioDecoderConfigurationOptions struct {
@@ -720,14 +718,14 @@ type MediaUri struct {
 }
 
 type VideoSourceMode struct {
-	Token         onvif.ReferenceToken `bson:"token" json:"token"`
-	Enabled       bool                 `bson:"enabled" json:"enabled"`
-	MaxFramerate  float64              `bson:"maxFramerate" json:"maxFramerate"`
-	MaxResolution VideoResolution      `bson:"maxResolution" json:"maxResolution"`
-	Encodings     EncodingTypes        `bson:"encodings" json:"encodings"`
-	Reboot        bool                 `bson:"reboot" json:"reboot"`
-	Description   Description          `bson:"description" json:"description"`
-	Extension     map[string]string    `bson:"extension" json:"extension"`
+	Token         string            `bson:"token" json:"token"`
+	Enabled       bool              `bson:"enabled" json:"enabled"`
+	MaxFramerate  float64           `bson:"maxFramerate" json:"maxFramerate"`
+	MaxResolution VideoResolution   `bson:"maxResolution" json:"maxResolution"`
+	Encodings     EncodingTypes     `bson:"encodings" json:"encodings"`
+	Reboot        bool              `bson:"reboot" json:"reboot"`
+	Description   Description       `bson:"description" json:"description"`
+	Extension     map[string]string `bson:"extension" json:"extension"`
 }
 
 type EncodingTypes struct {
@@ -868,9 +866,9 @@ type ReverseOptions struct {
 }
 
 type PTZPreset struct {
-	Token       onvif.ReferenceToken `bson:"token" json:"token"`
-	Name        string               `bson:"name" json:"name"`
-	PTZPosition PTZVector            `bson:"ptzPosition" json:"ptzPosition"`
+	Token       string    `bson:"token" json:"token"`
+	Name        string    `bson:"name" json:"name"`
+	PTZPosition PTZVector `bson:"ptzPosition" json:"ptzPosition"`
 }
 
 type PTZVector struct {
@@ -900,7 +898,7 @@ type GeoLocation struct {
 }
 
 type PresetTour struct {
-	Token             onvif.ReferenceToken           `bson:"token" json:"token"`
+	Token             string                         `bson:"token" json:"token"`
 	Name              string                         `bson:"name" json:"name"`
 	Status            PTZPresetTourStatus            `bson:"status" json:"status"`
 	AutoStart         bool                           `bson:"autoStart" json:"autoStart"`
@@ -923,10 +921,10 @@ type PTZPresetTourSpot struct {
 }
 
 type PTZPresetTourPresetDetail struct {
-	PresetToken   onvif.ReferenceToken `bson:"presetToken" json:"presetToken"`
-	Home          bool                 `bson:"home" json:"home"`
-	PTZPosition   PTZVector            `bson:"ptzPosition" json:"ptzPosition"`
-	TypeExtension map[string]string    `bson:"typeExtension" json:"typeExtension"`
+	PresetToken   string            `bson:"presetToken" json:"presetToken"`
+	Home          bool              `bson:"home" json:"home"`
+	PTZPosition   PTZVector         `bson:"ptzPosition" json:"ptzPosition"`
+	TypeExtension map[string]string `bson:"typeExtension" json:"typeExtension"`
 }
 
 type PTZPresetTourStartingCondition struct {
@@ -956,11 +954,11 @@ type PTZPresetTourSpotOptions struct {
 }
 
 type PTZPresetTourPresetDetailOptions struct {
-	PresetToken          onvif.ReferenceToken `bson:"presetToken" json:"presetToken"`
-	Home                 bool                 `bson:"home" json:"home"`
-	PanTiltPositionSpace Space2DDescription   `bson:"panTiltPositionSpace" json:"panTiltPositionSpace"`
-	ZoomPositionSpace    Space1DDescription   `bson:"zoomPositionSpace" json:"zoomPositionSpace"`
-	Extension            map[string]string    `bson:"extension" json:"extension"`
+	PresetToken          string             `bson:"presetToken" json:"presetToken"`
+	Home                 bool               `bson:"home" json:"home"`
+	PanTiltPositionSpace Space2DDescription `bson:"panTiltPositionSpace" json:"panTiltPositionSpace"`
+	ZoomPositionSpace    Space1DDescription `bson:"zoomPositionSpace" json:"zoomPositionSpace"`
+	Extension            map[string]string  `bson:"extension" json:"extension"`
 }
 
 // Capabilities of device
@@ -1226,11 +1224,11 @@ type Dot11Configuration struct {
 }
 
 type Dot11SecurityConfiguration struct {
-	Mode      string               `bson:"mode" json:"mode"`
-	Algorithm string               `bson:"algorithm" json:"algorithm"`
-	PSK       Dot11PSKSet          `bson:"psk" json:"psk"`
-	Dot1X     onvif.ReferenceToken `bson:"dot1x" json:"dot1x"`
-	Extension map[string]string    `bson:"extension" json:"extension"`
+	Mode      string            `bson:"mode" json:"mode"`
+	Algorithm string            `bson:"algorithm" json:"algorithm"`
+	PSK       Dot11PSKSet       `bson:"psk" json:"psk"`
+	Dot1X     string            `bson:"dot1x" json:"dot1x"`
+	Extension map[string]string `bson:"extension" json:"extension"`
 }
 
 type Dot11PSKSet struct {
@@ -1316,7 +1314,7 @@ type NetworkGateway struct {
 }
 
 type NetworkZeroConfiguration struct {
-	InterfaceToken onvif.ReferenceToken              `bson:"interfaceToken" json:"interfaceToken"`
+	InterfaceToken string                            `bson:"interfaceToken" json:"interfaceToken"`
 	Enabled        bool                              `bson:"enabled" json:"enabled"`
 	Addresses      string                            `bson:"addresses" json:"addresses"`
 	Extension      NetworkZeroConfigurationExtension `bson:"extension" json:"extension"`
@@ -1391,7 +1389,7 @@ type CertificateUsage struct {
 }
 
 type Dot1XConfiguration struct {
-	Dot1XConfigurationToken onvif.ReferenceToken   `bson:"dot1xConfigurationToken" json:"dot1xConfigurationToken"`
+	Dot1XConfigurationToken string                 `bson:"dot1xConfigurationToken" json:"dot1xConfigurationToken"`
 	Identity                string                 `bson:"identity" json:"identity"`
 	AnonymousID             string                 `bson:"anonymousID" json:"anonymousID"`
 	EAPMethod               int                    `bson:"eapMethod" json:"eapMethod"`
@@ -1419,12 +1417,12 @@ type Dot11Capabilities struct {
 }
 
 type Dot11Status struct {
-	SSID              string               `bson:"ssid" json:"ssid"`
-	BSSID             string               `bson:"bssid" json:"bssid"`
-	PairCipher        string               `bson:"pairCipher" json:"pairCipher"`
-	GroupCipher       string               `bson:"groupCipher" json:"groupCipher"`
-	SignalStrength    string               `bson:"signalStrength" json:"signalStrength"`
-	ActiveConfigAlias onvif.ReferenceToken `bson:"activeConfigAlias" json:"activeConfigAlias"`
+	SSID              string `bson:"ssid" json:"ssid"`
+	BSSID             string `bson:"bssid" json:"bssid"`
+	PairCipher        string `bson:"pairCipher" json:"pairCipher"`
+	GroupCipher       string `bson:"groupCipher" json:"groupCipher"`
+	SignalStrength    string `bson:"signalStrength" json:"signalStrength"`
+	ActiveConfigAlias string `bson:"activeConfigAlias" json:"activeConfigAlias"`
 }
 type Dot11AvailableNetworks struct {
 	SSID                  string            `bson:"ssid" json:"ssid"`
@@ -1446,15 +1444,15 @@ type SystemLogUri struct {
 }
 
 type LocationEntity struct {
-	Entity           string               `bson:"entity" json:"entity"`
-	Token            onvif.ReferenceToken `bson:"token" json:"token"`
-	Fixed            bool                 `bson:"fixed" json:"fixed"`
-	GeoSource        string               `bson:"geoSource" json:"geoSource"`
-	AutoGeo          bool                 `bson:"autoGeo" json:"autoGeo"`
-	GeoLocation      GeoLocation          `bson:"geoLocation" json:"geoLocation"`
-	GeoOrientation   GeoOrientation       `bson:"geoOrientation" json:"geoOrientation"`
-	LocalLocation    LocalLocation        `bson:"localLocation" json:"localLocation"`
-	LocalOrientation LocalOrientation     `bson:"localOrientation" json:"localOrientation"`
+	Entity           string           `bson:"entity" json:"entity"`
+	Token            string           `bson:"token" json:"token"`
+	Fixed            bool             `bson:"fixed" json:"fixed"`
+	GeoSource        string           `bson:"geoSource" json:"geoSource"`
+	AutoGeo          bool             `bson:"autoGeo" json:"autoGeo"`
+	GeoLocation      GeoLocation      `bson:"geoLocation" json:"geoLocation"`
+	GeoOrientation   GeoOrientation   `bson:"geoOrientation" json:"geoOrientation"`
+	LocalLocation    LocalLocation    `bson:"localLocation" json:"localLocation"`
+	LocalOrientation LocalOrientation `bson:"localOrientation" json:"localOrientation"`
 }
 
 type LocalOrientation struct {

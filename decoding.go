@@ -8,7 +8,6 @@ import (
 
 	"github.com/beevik/etree"
 	"github.com/jjbarbosa7/onvif/device"
-	"github.com/jjbarbosa7/onvif/xsd/onvif"
 )
 
 func getTimeFromXsdDateTime(xsdDateTime *etree.Element) (time.Time, error) {
@@ -297,7 +296,7 @@ func (dev *Device) DecodePTZNode(data []byte) (*device.PTZNode, error) {
 
 	token := node.SelectAttrValue("token", "")
 	tokenString := fmt.Sprintf("%v", token)
-	ptzNode.Token = onvif.ReferenceToken(tokenString)
+	ptzNode.Token = tokenString
 	if e := node.FindElement("Name"); e != nil {
 		ptzNode.Name = e.Text()
 	}
@@ -464,7 +463,7 @@ func (dev *Device) DecodePTZConfiguration(data []byte) (*device.PTZConfiguration
 
 	token := configuration.SelectAttrValue("token", "")
 	tokenString := fmt.Sprintf("%v", token)
-	ptzConfiguration.Token = onvif.ReferenceToken(tokenString)
+	ptzConfiguration.Token = tokenString
 
 	if e := configuration.FindElement("Name"); e != nil {
 		ptzConfiguration.Name = e.Text()
@@ -482,7 +481,7 @@ func (dev *Device) DecodePTZConfiguration(data []byte) (*device.PTZConfiguration
 		ptzConfiguration.PresetTourRamp, _ = strconv.Atoi(e.Text())
 	}
 	if e := configuration.FindElement("NodeToken"); e != nil {
-		ptzConfiguration.NodeToken = onvif.ReferenceToken(e.Text())
+		ptzConfiguration.NodeToken = e.Text()
 	}
 	if e := configuration.FindElement("DefaultAbsolutePantTiltPositionSpace"); e != nil {
 		ptzConfiguration.DefaultAbsolutePantTiltPositionSpace = e.Text()
@@ -576,7 +575,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]device.Profile, error) {
 
 		token := profileElement.SelectAttrValue("token", "")
 		tokenString := fmt.Sprintf("%v", token)
-		profile.Token = onvif.ReferenceToken(tokenString)
+		profile.Token = tokenString
 
 		fixed := profileElement.SelectAttrValue("fixed", "")
 		fixedString := fmt.Sprintf("%v", fixed)
@@ -585,7 +584,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]device.Profile, error) {
 		if e := profileElement.FindElement("VideoSourceConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
 			tokenString := fmt.Sprintf("%v", token)
-			profile.VideoSourceConfiguration.Token = onvif.ReferenceToken(tokenString)
+			profile.VideoSourceConfiguration.Token = tokenString
 
 			if e1 := e.FindElement("Name"); e1 != nil {
 				profile.VideoSourceConfiguration.Name = e1.Text()
@@ -597,7 +596,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]device.Profile, error) {
 				profile.VideoSourceConfiguration.ViewMode = e1.Text()
 			}
 			if e1 := e.FindElement("SourceToken"); e1 != nil {
-				profile.VideoSourceConfiguration.SourceToken = onvif.ReferenceToken(e1.Text())
+				profile.VideoSourceConfiguration.SourceToken = e1.Text()
 			}
 			if e1 := e.FindElement("Bounds"); e1 != nil {
 				if e2 := e1.FindElement("x"); e2 != nil {
@@ -617,7 +616,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]device.Profile, error) {
 		if e := profileElement.FindElement("AudioSourceConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
 			tokenString := fmt.Sprintf("%v", token)
-			profile.AudioSourceConfiguration.Token = onvif.ReferenceToken(tokenString)
+			profile.AudioSourceConfiguration.Token = tokenString
 
 			if e1 := e.FindElement("Name"); e1 != nil {
 				profile.AudioSourceConfiguration.Name = e1.Text()
@@ -626,13 +625,13 @@ func (dev *Device) DecodeProfiles(data []byte) ([]device.Profile, error) {
 				profile.AudioSourceConfiguration.UseCount, _ = strconv.Atoi(e1.Text())
 			}
 			if e1 := e.FindElement("SourceToken"); e1 != nil {
-				profile.AudioSourceConfiguration.SourceToken = onvif.ReferenceToken(e1.Text())
+				profile.AudioSourceConfiguration.SourceToken = e1.Text()
 			}
 		}
 		if e := profileElement.FindElement("VideoEncoderConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
 			tokenString := fmt.Sprintf("%v", token)
-			profile.VideoEncoderConfiguration.Token = onvif.ReferenceToken(tokenString)
+			profile.VideoEncoderConfiguration.Token = tokenString
 
 			if e1 := e.FindElement("Name"); e1 != nil {
 				profile.VideoEncoderConfiguration.Name = e1.Text()
@@ -713,7 +712,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]device.Profile, error) {
 		if e := profileElement.FindElement("AudioEncoderConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
 			tokenString := fmt.Sprintf("%v", token)
-			profile.AudioEncoderConfiguration.Token = onvif.ReferenceToken(tokenString)
+			profile.AudioEncoderConfiguration.Token = tokenString
 
 			if e1 := e.FindElement("Name"); e1 != nil {
 				profile.AudioEncoderConfiguration.Name = e1.Text()
@@ -762,7 +761,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]device.Profile, error) {
 		if e := profileElement.FindElement("VideoAnalyticsConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
 			tokenString := fmt.Sprintf("%v", token)
-			profile.VideoAnalyticsConfiguration.Token = onvif.ReferenceToken(tokenString)
+			profile.VideoAnalyticsConfiguration.Token = tokenString
 
 			if e1 := e.FindElement("Name"); e1 != nil {
 				profile.VideoAnalyticsConfiguration.Name = e1.Text()
@@ -824,7 +823,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]device.Profile, error) {
 		if e := profileElement.FindElement("PTZConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
 			tokenString := fmt.Sprintf("%v", token)
-			profile.PTZConfiguration.Token = onvif.ReferenceToken(tokenString)
+			profile.PTZConfiguration.Token = tokenString
 
 			if e1 := e.FindElement("Name"); e1 != nil {
 				profile.PTZConfiguration.Name = e1.Text()
@@ -833,7 +832,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]device.Profile, error) {
 				profile.PTZConfiguration.UseCount, _ = strconv.Atoi(e1.Text())
 			}
 			if e1 := e.FindElement("NodeToken"); e1 != nil {
-				profile.PTZConfiguration.NodeToken = onvif.ReferenceToken(e1.Text())
+				profile.PTZConfiguration.NodeToken = e1.Text()
 			}
 			if e1 := e.FindElement("DefaultAbsolutePantTiltPositionSpace"); e1 != nil {
 				profile.PTZConfiguration.DefaultAbsolutePantTiltPositionSpace = e1.Text()
@@ -922,7 +921,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]device.Profile, error) {
 		if e := profileElement.FindElement("MetadataConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
 			tokenString := fmt.Sprintf("%v", token)
-			profile.MetadataConfiguration.Token = onvif.ReferenceToken(tokenString)
+			profile.MetadataConfiguration.Token = tokenString
 
 			if e1 := e.FindElement("Name"); e1 != nil {
 				profile.MetadataConfiguration.Name = e1.Text()
@@ -1018,7 +1017,7 @@ func (dev *Device) DecodePresets(data []byte) ([]device.PTZPreset, error) {
 
 		token := presetElement.SelectAttrValue("token", "")
 		tokenString := fmt.Sprintf("%v", token)
-		preset.Token = onvif.ReferenceToken(tokenString)
+		preset.Token = tokenString
 
 		if e := presetElement.FindElement("Name"); e != nil {
 			preset.Name = e.Text()
