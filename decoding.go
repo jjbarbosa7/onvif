@@ -1106,7 +1106,7 @@ func (dev *Device) DecodeStatus(data []byte) (*device.PTZStatus, error) {
 	return &ptzStatus, nil
 }
 
-func (dev *Device) DecodeSetPreset(data []byte) (*onvif.ReferenceToken, error) {
+func (dev *Device) DecodeSetPreset(data []byte) (*string, error) {
 	doc := etree.NewDocument()
 
 	if err := doc.ReadFromBytes(data); err != nil {
@@ -1118,7 +1118,7 @@ func (dev *Device) DecodeSetPreset(data []byte) (*onvif.ReferenceToken, error) {
 		return nil, fmt.Errorf("PresetToken element not found")
 	}
 
-	presetToken := onvif.ReferenceToken(token.Text())
+	presetToken := token.Text()
 
 	return &presetToken, nil
 }
