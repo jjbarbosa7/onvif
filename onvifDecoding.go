@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/beevik/etree"
-	"github.com/jjbarbosa7/onvif/device"
 )
 
 func getTimeFromXsdDateTime(xsdDateTime *etree.Element) (time.Time, error) {
@@ -60,7 +59,7 @@ func getTimeFromXsdDateTime(xsdDateTime *etree.Element) (time.Time, error) {
 
 	return utcDateTime, nil
 }
-func getTimeDurationFromXsdDuration(xsdDuration *etree.Element) (device.TimeDuration, error) {
+func getTimeDurationFromXsdDuration(xsdDuration *etree.Element) (TimeDuration, error) {
 	// Find the <Time> element
 	timeElement := xsdDuration.FindElement("./Time")
 	if timeElement == nil {
@@ -86,19 +85,19 @@ func getTimeDurationFromXsdDuration(xsdDuration *etree.Element) (device.TimeDura
 
 	duration := time.Duration(hour)*time.Hour + time.Duration(min)*time.Minute + time.Duration(sec)*time.Second
 
-	timeDuration := device.TimeDuration(duration.String())
+	timeDuration := TimeDuration(duration.String())
 
 	return timeDuration, nil
 }
 
-func (dev *Device) DecodeSystemDateTime(data []byte) (*device.SystemDateTime, error) {
+func (dev *Device) DecodeSystemDateTime(data []byte) (*SystemDateTime, error) {
 	doc := etree.NewDocument()
 
 	if err := doc.ReadFromBytes(data); err != nil {
 		return nil, err
 	}
 
-	systemDateTime := device.SystemDateTime{}
+	systemDateTime := SystemDateTime{}
 
 	if e := doc.FindElement("./Envelope/Body/GetSystemDateAndTimeResponse/SystemDateAndTime/DateTimeType"); e != nil {
 		systemDateTime.DateTimeType = e.Text()
@@ -119,14 +118,14 @@ func (dev *Device) DecodeSystemDateTime(data []byte) (*device.SystemDateTime, er
 	return &systemDateTime, nil
 }
 
-func (dev *Device) DecodeCapabilities(data []byte) (*device.Capabilities, error) {
+func (dev *Device) DecodeCapabilities(data []byte) (*Capabilities, error) {
 	doc := etree.NewDocument()
 
 	if err := doc.ReadFromBytes(data); err != nil {
 		return nil, err
 	}
 
-	capabilities := device.Capabilities{}
+	capabilities := Capabilities{}
 
 	// Analytics
 	analytics := doc.FindElement("./Envelope/Body/GetCapabilitiesResponse/Capabilities/Analytics")
@@ -280,14 +279,14 @@ func (dev *Device) DecodeCapabilities(data []byte) (*device.Capabilities, error)
 	return &capabilities, nil
 }
 
-func (dev *Device) DecodePTZNode(data []byte) (*device.PTZNode, error) {
+func (dev *Device) DecodePTZNode(data []byte) (*PTZNode, error) {
 	doc := etree.NewDocument()
 
 	if err := doc.ReadFromBytes(data); err != nil {
 		return nil, err
 	}
 
-	ptzNode := device.PTZNode{}
+	ptzNode := PTZNode{}
 
 	node := doc.FindElement("./Envelope/Body/GetNodesResponse/PTZNode")
 	if node == nil {
@@ -447,14 +446,14 @@ func (dev *Device) DecodePTZNode(data []byte) (*device.PTZNode, error) {
 	return &ptzNode, nil
 }
 
-func (dev *Device) DecodePTZConfiguration(data []byte) (*device.PTZConfiguration, error) {
+func (dev *Device) DecodePTZConfiguration(data []byte) (*PTZConfiguration, error) {
 	doc := etree.NewDocument()
 
 	if err := doc.ReadFromBytes(data); err != nil {
 		return nil, err
 	}
 
-	ptzConfiguration := device.PTZConfiguration{}
+	ptzConfiguration := PTZConfiguration{}
 
 	configuration := doc.FindElement("./Envelope/Body/GetConfigurationsResponse/PTZConfiguration")
 	if configuration == nil {
@@ -561,17 +560,17 @@ func (dev *Device) DecodePTZConfiguration(data []byte) (*device.PTZConfiguration
 	return &ptzConfiguration, nil
 }
 
-func (dev *Device) DecodeProfiles(data []byte) ([]device.Profile, error) {
+func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 	doc := etree.NewDocument()
 
 	if err := doc.ReadFromBytes(data); err != nil {
 		return nil, err
 	}
 
-	profiles := make([]device.Profile, 0)
+	profiles := make([]Profile, 0)
 
 	for _, profileElement := range doc.FindElements("./Envelope/Body/GetProfilesResponse/Profiles") {
-		profile := device.Profile{}
+		profile := Profile{}
 
 		token := profileElement.SelectAttrValue("token", "")
 		tokenString := fmt.Sprintf("%v", token)
@@ -1003,17 +1002,17 @@ func (dev *Device) DecodeProfiles(data []byte) ([]device.Profile, error) {
 	return profiles, nil
 }
 
-func (dev *Device) DecodePresets(data []byte) ([]device.PTZPreset, error) {
+func (dev *Device) DecodePresets(data []byte) ([]PTZPreset, error) {
 	doc := etree.NewDocument()
 
 	if err := doc.ReadFromBytes(data); err != nil {
 		return nil, err
 	}
 
-	presets := make([]device.PTZPreset, 0)
+	presets := make([]PTZPreset, 0)
 
 	for _, presetElement := range doc.FindElements("./Envelope/Body/GetPresetsResponse/Preset") {
-		preset := device.PTZPreset{}
+		preset := PTZPreset{}
 
 		token := presetElement.SelectAttrValue("token", "")
 		tokenString := fmt.Sprintf("%v", token)
@@ -1047,14 +1046,14 @@ func (dev *Device) DecodePresets(data []byte) ([]device.PTZPreset, error) {
 	return presets, nil
 }
 
-func (dev *Device) DecodeStatus(data []byte) (*device.PTZStatus, error) {
+func (dev *Device) DecodeStatus(data []byte) (*PTZStatus, error) {
 	doc := etree.NewDocument()
 
 	if err := doc.ReadFromBytes(data); err != nil {
 		return nil, err
 	}
 
-	ptzStatus := device.PTZStatus{}
+	ptzStatus := PTZStatus{}
 
 	status := doc.FindElement("./Envelope/Body/GetStatusResponse/PTZStatus")
 	if status == nil {

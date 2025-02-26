@@ -2,7 +2,7 @@ package event
 
 import (
 	"github.com/jjbarbosa7/onvif/xsd"
-	"github.com/jjbarbosa7/onvif/xsd/onvif"
+	"github.com/jjbarbosa7/onvif/xsd_onvif"
 )
 
 // Address Alias
@@ -32,10 +32,10 @@ type MessageNotification struct {
 }
 
 type MessageNotificationHolderType struct {
-	UtcTime           xsd.DateTime     `xml:",attr"`
-	PropertyOperation xsd.String       `xml:",attr"`
-	Source            onvif.SimpleItem `xml:"Source>SimpleItem"`
-	Data              onvif.SimpleItem `xml:"Data>SimpleItem"`
+	UtcTime           xsd.DateTime         `xml:",attr"`
+	PropertyOperation xsd.String           `xml:",attr"`
+	Source            xsd_onvif.SimpleItem `xml:"Source>SimpleItem"`
+	Data              xsd_onvif.SimpleItem `xml:"Data>SimpleItem"`
 }
 
 // ActionType for AttributedURIType

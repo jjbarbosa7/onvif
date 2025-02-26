@@ -1,10 +1,10 @@
-package device
+package onvif
 
 import (
 	"time"
 )
 
-// Translation of onvif types from wsdl to go
+// ONVIF types in JSON format
 
 type TimeDuration string
 

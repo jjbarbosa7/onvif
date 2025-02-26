@@ -1,4 +1,4 @@
-package onvif
+package xsd_onvif
 
 import (
 	"github.com/jjbarbosa7/onvif/xsd"
