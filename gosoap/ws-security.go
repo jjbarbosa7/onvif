@@ -1,12 +1,11 @@
 package gosoap
 
 import (
+	"crypto/rand"
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/xml"
 	"time"
-
-	"github.com/elgs/gostrgen"
 )
 
 /*
@@ -62,19 +61,16 @@ type wsAuth struct {
 
 // NewSecurity get a new security
 func NewSecurity(username, passwd string, timeDiff time.Duration) Security {
-	/** Generating Nonce sequence **/
-	charsToGenerate := 32
-	charSet := gostrgen.Lower | gostrgen.Digit
+	nonceSeq := generateNonce()                                     // Generate proper Base64-encoded Nonce
+	created := time.Now().Add(-timeDiff).UTC().Format(time.RFC3339) // Ensure no milliseconds
 
-	nonceSeq, _ := gostrgen.RandGen(charsToGenerate, charSet, "", "")
-	created := time.Now().Add(-timeDiff).UTC().Format(time.RFC3339Nano)
 	security := Security{
 		MustUnderstand: "1",
 		Auth: wsAuth{
 			Username: username,
 			Password: password{
 				Type:     passwordType,
-				Password: generateToken(nonceSeq, created, passwd),
+				Password: generateTokenBase64(nonceSeq, created, passwd),
 			},
 			Nonce: nonce{
 				Type:  encodingType,
@@ -87,12 +83,20 @@ func NewSecurity(username, passwd string, timeDiff time.Duration) Security {
 	return security
 }
 
+func generateNonce() string {
+	nonceBytes := make([]byte, 16)                       // Generate 16 random bytes
+	rand.Read(nonceBytes)                                // Fill with random binary data
+	return base64.StdEncoding.EncodeToString(nonceBytes) // Encode as Base64
+}
+
 // Digest = B64ENCODE( SHA1( B64DECODE( Nonce ) + Date + Password ) )
-func generateToken(Nonce string, Created string, Password string) string {
-	sDec, _ := base64.StdEncoding.DecodeString(Nonce)
+func generateTokenBase64(Nonce string, Created string, Password string) string {
+	sDec, _ := base64.StdEncoding.DecodeString(Nonce) // Decode Nonce properly
 
 	hasher := sha1.New()
-	hasher.Write([]byte(string(sDec) + Created + Password))
+	hasher.Write(sDec)             // Use raw binary Nonce
+	hasher.Write([]byte(Created))  // Use timestamp as raw bytes
+	hasher.Write([]byte(Password)) // Use password as raw bytes
 
-	return base64.StdEncoding.EncodeToString(hasher.Sum(nil))
+	return base64.StdEncoding.EncodeToString(hasher.Sum(nil)) // Convert SHA1 hash to Base64
 }

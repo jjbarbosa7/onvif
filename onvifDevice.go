@@ -81,10 +81,9 @@ type Device struct {
 }
 
 type DeviceParams struct {
-	Xaddr      string
-	Username   string
-	Password   string
-	HttpClient *http.Client
+	Xaddr    string
+	Username string
+	Password string
 }
 
 // GetServices return available endpoints
@@ -95,40 +94,6 @@ func (dev *Device) GetServices() map[string]string {
 // GetDeviceParams return available endpoints
 func (dev *Device) GetDeviceParams() DeviceParams {
 	return dev.params
-}
-
-// GetAvailableDevicesAtSpecificEthernetInterface ...
-func GetAvailableDevicesAtSpecificEthernetInterface(interfaceName string) ([]Device, error) {
-	// Call a ws-discovery Probe Message to Discover NVT type Devices
-	devices, err := sendProbe(interfaceName, nil, []string{"dn:" + NVT.String()}, map[string]string{"dn": "http://www.onvif.org/ver10/network/wsdl"})
-	if err != nil {
-		return nil, err
-	}
-
-	nvtDevicesSeen := make(map[string]bool)
-	nvtDevices := make([]Device, 0)
-
-	for _, j := range devices {
-		doc := etree.NewDocument()
-		if err := doc.ReadFromString(j); err != nil {
-			return nil, err
-		}
-
-		for _, xaddr := range doc.Root().FindElements("./Body/ProbeMatches/ProbeMatch/XAddrs") {
-			xaddr := strings.Split(strings.Split(xaddr.Text(), " ")[0], "/")[2]
-			if !nvtDevicesSeen[xaddr] {
-				dev, _, _, err := NewDevice(DeviceParams{Xaddr: strings.Split(xaddr, " ")[0]})
-				if err != nil {
-					// TODO(jfsmig) print a warning
-				} else {
-					nvtDevicesSeen[xaddr] = true
-					nvtDevices = append(nvtDevices, *dev)
-				}
-			}
-		}
-	}
-
-	return nvtDevices, nil
 }
 
 func (dev *Device) getTimeDiff(resp *http.Response) (time.Duration, error) {
@@ -186,23 +151,21 @@ func (dev *Device) getSupportedServices(resp *http.Response) (*Capabilities, err
 }
 
 // NewDevice function construct a ONVIF Device entity
-func NewDevice(params DeviceParams) (*Device, time.Duration, *Capabilities, error) {
+func NewDevice(params DeviceParams, httpClient *http.Client, omitSecurityHeader bool) (*Device, time.Duration, *Capabilities, error) {
 	dev := new(Device)
 	dev.params = params
 	dev.endpoints = make(map[string]string)
 	dev.addEndpoint("Device", "http://"+dev.params.Xaddr+"/onvif/device_service")
 
-	if dev.params.HttpClient == nil {
-		dev.params.HttpClient = new(http.Client)
-	}
-
 	// Attempt to get the time difference between the client and the camera; this is used for WS-Security
 	// First try to get the time without authentication, as with some cameras (Axis), the authentication will fail
 	// if the time difference between the client and the camera is too large.
 	getTime := device.GetSystemDateAndTime{}
-	resp, err := dev.CallMethod(getTime, time.Duration(0), true)
+	resp, err := dev.CallMethod(getTime, time.Duration(0), httpClient, true)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		resp, err = dev.CallMethod(getTime, time.Duration(0), false)
+		if !omitSecurityHeader {
+			resp, err = dev.CallMethod(getTime, time.Duration(0), httpClient, false)
+		}
 		if err != nil || resp.StatusCode != http.StatusOK {
 			return nil, time.Duration(0), nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetSystemDateAndTime): %v", dev.params.Xaddr, err)
 		}
@@ -213,9 +176,14 @@ func NewDevice(params DeviceParams) (*Device, time.Duration, *Capabilities, erro
 	}
 
 	getCapabilities := device.GetCapabilities{Category: "All"}
-	resp, err = dev.CallMethod(getCapabilities, timeDiff, false)
+	resp, err = dev.CallMethod(getCapabilities, timeDiff, httpClient, true)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		return nil, timeDiff, nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetCapabilities): %v", dev.params.Xaddr, err)
+		if !omitSecurityHeader {
+			resp, err = dev.CallMethod(getCapabilities, timeDiff, httpClient, false)
+		}
+		if err != nil || resp.StatusCode != http.StatusOK {
+			return nil, timeDiff, nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetCapabilities): %v", dev.params.Xaddr, err)
+		}
 	}
 
 	capabilities, err := dev.getSupportedServices(resp)
@@ -282,7 +250,7 @@ func (dev Device) getEndpoint(endpoint string) (string, error) {
 
 // CallMethod functions call an method, defined <method> struct.
 // You should use Authenticate method to call authorized requests.
-func (dev Device) CallMethod(method interface{}, timeDiff time.Duration, omitSecurityHeader bool) (*http.Response, error) {
+func (dev Device) CallMethod(method interface{}, timeDiff time.Duration, httpClient *http.Client, omitSecurityHeader bool) (*http.Response, error) {
 	pkgPath := strings.Split(reflect.TypeOf(method).PkgPath(), "/")
 	pkg := strings.ToLower(pkgPath[len(pkgPath)-1])
 
@@ -290,11 +258,11 @@ func (dev Device) CallMethod(method interface{}, timeDiff time.Duration, omitSec
 	if err != nil {
 		return nil, err
 	}
-	return dev.callMethodDo(endpoint, method, timeDiff, omitSecurityHeader)
+	return dev.callMethodDo(endpoint, method, timeDiff, httpClient, omitSecurityHeader)
 }
 
 // CallMethod functions call an method, defined <method> struct with authentication data
-func (dev Device) callMethodDo(endpoint string, method interface{}, timeDiff time.Duration, omitSecurityHeader bool) (*http.Response, error) {
+func (dev Device) callMethodDo(endpoint string, method interface{}, timeDiff time.Duration, httpClient *http.Client, omitSecurityHeader bool) (*http.Response, error) {
 	output, err := xml.MarshalIndent(method, "  ", "    ")
 	if err != nil {
 		return nil, err
@@ -313,13 +281,34 @@ func (dev Device) callMethodDo(endpoint string, method interface{}, timeDiff tim
 		soap.AddWSSecurity(dev.params.Username, dev.params.Password, timeDiff)
 	}
 
-	return sendSoap(dev.params.HttpClient, endpoint, soap.String())
+	return sendSoap(httpClient, endpoint, soap.String())
 }
 
+// sendSoap sends an ONVIF SOAP request and retries if 401 Unauthorized is received
 func sendSoap(httpClient *http.Client, endpoint, message string) (*http.Response, error) {
-	resp, err := httpClient.Post(endpoint, "application/soap+xml; charset=utf-8", bytes.NewBufferString(message))
+	req, err := http.NewRequest("POST", endpoint, bytes.NewBufferString(message))
 	if err != nil {
-		return resp, errors.Annotate(err, "Post")
+		return nil, errors.Annotate(err, "Failed to create request")
+	}
+	req.Header.Set("Content-Type", "application/soap+xml; charset=utf-8")
+	req.Header.Set("SOAPAction", `""`)
+
+	// First request attempt
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, errors.Annotate(err, "Failed to send request")
+	}
+
+	// If response is 401, retry with authentication
+	if resp.StatusCode == http.StatusUnauthorized {
+		// Close first response before retrying
+		resp.Body.Close()
+
+		// Resend request
+		resp, err = httpClient.Do(req)
+		if err != nil {
+			return nil, errors.Annotate(err, "Failed to send authenticated request")
+		}
 	}
 
 	return resp, nil
