@@ -167,12 +167,12 @@ func NewDevice(params DeviceParams, httpClient *http.Client, omitSecurityHeader 
 			resp, err = dev.CallMethod(getTime, time.Duration(0), httpClient, false)
 		}
 		if err != nil || resp.StatusCode != http.StatusOK {
-			return nil, time.Duration(0), nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetSystemDateAndTime): %v", dev.params.Xaddr, err)
+			return nil, time.Duration(0), nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetSystemDateAndTime): %s", dev.params.Xaddr, err)
 		}
 	}
 	timeDiff, err := dev.getTimeDiff(resp)
 	if err != nil {
-		return nil, time.Duration(0), nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetSystemDateAndTime): %v", dev.params.Xaddr, err)
+		return nil, time.Duration(0), nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetSystemDateAndTime): %s", dev.params.Xaddr, err)
 	}
 
 	getCapabilities := device.GetCapabilities{Category: "All"}
@@ -182,7 +182,7 @@ func NewDevice(params DeviceParams, httpClient *http.Client, omitSecurityHeader 
 			resp, err = dev.CallMethod(getCapabilities, timeDiff, httpClient, false)
 		}
 		if err != nil || resp.StatusCode != http.StatusOK {
-			return nil, timeDiff, nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetCapabilities): %v", dev.params.Xaddr, err)
+			return nil, timeDiff, nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetCapabilities): %s", dev.params.Xaddr, err)
 		}
 	}
 
@@ -277,7 +277,7 @@ func (dev Device) callMethodDo(endpoint string, method interface{}, timeDiff tim
 	soap.AddAction()
 
 	//Auth Handling
-	if !omitSecurityHeader && dev.params.Username != "" && dev.params.Password != "" {
+	if !omitSecurityHeader {
 		soap.AddWSSecurity(dev.params.Username, dev.params.Password, timeDiff)
 	}
 

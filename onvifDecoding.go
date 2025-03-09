@@ -294,7 +294,7 @@ func (dev *Device) DecodePTZNode(data []byte) (*PTZNode, error) {
 	}
 
 	token := node.SelectAttrValue("token", "")
-	tokenString := fmt.Sprintf("%v", token)
+	tokenString := fmt.Sprintf("%s", token)
 	ptzNode.Token = tokenString
 	if e := node.FindElement("Name"); e != nil {
 		ptzNode.Name = e.Text()
@@ -461,7 +461,7 @@ func (dev *Device) DecodePTZConfiguration(data []byte) (*PTZConfiguration, error
 	}
 
 	token := configuration.SelectAttrValue("token", "")
-	tokenString := fmt.Sprintf("%v", token)
+	tokenString := fmt.Sprintf("%s", token)
 	ptzConfiguration.Token = tokenString
 
 	if e := configuration.FindElement("Name"); e != nil {
@@ -573,16 +573,16 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 		profile := Profile{}
 
 		token := profileElement.SelectAttrValue("token", "")
-		tokenString := fmt.Sprintf("%v", token)
+		tokenString := fmt.Sprintf("%s", token)
 		profile.Token = tokenString
 
 		fixed := profileElement.SelectAttrValue("fixed", "")
-		fixedString := fmt.Sprintf("%v", fixed)
+		fixedString := fmt.Sprintf("%s", fixed)
 		profile.Fixed = fixedString == "true"
 
 		if e := profileElement.FindElement("VideoSourceConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
-			tokenString := fmt.Sprintf("%v", token)
+			tokenString := fmt.Sprintf("%s", token)
 			profile.VideoSourceConfiguration.Token = tokenString
 
 			if e1 := e.FindElement("Name"); e1 != nil {
@@ -614,7 +614,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 		}
 		if e := profileElement.FindElement("AudioSourceConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
-			tokenString := fmt.Sprintf("%v", token)
+			tokenString := fmt.Sprintf("%s", token)
 			profile.AudioSourceConfiguration.Token = tokenString
 
 			if e1 := e.FindElement("Name"); e1 != nil {
@@ -629,7 +629,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 		}
 		if e := profileElement.FindElement("VideoEncoderConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
-			tokenString := fmt.Sprintf("%v", token)
+			tokenString := fmt.Sprintf("%s", token)
 			profile.VideoEncoderConfiguration.Token = tokenString
 
 			if e1 := e.FindElement("Name"); e1 != nil {
@@ -710,7 +710,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 		}
 		if e := profileElement.FindElement("AudioEncoderConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
-			tokenString := fmt.Sprintf("%v", token)
+			tokenString := fmt.Sprintf("%s", token)
 			profile.AudioEncoderConfiguration.Token = tokenString
 
 			if e1 := e.FindElement("Name"); e1 != nil {
@@ -759,7 +759,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 		}
 		if e := profileElement.FindElement("VideoAnalyticsConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
-			tokenString := fmt.Sprintf("%v", token)
+			tokenString := fmt.Sprintf("%s", token)
 			profile.VideoAnalyticsConfiguration.Token = tokenString
 
 			if e1 := e.FindElement("Name"); e1 != nil {
@@ -821,7 +821,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 		}
 		if e := profileElement.FindElement("PTZConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
-			tokenString := fmt.Sprintf("%v", token)
+			tokenString := fmt.Sprintf("%s", token)
 			profile.PTZConfiguration.Token = tokenString
 
 			if e1 := e.FindElement("Name"); e1 != nil {
@@ -919,7 +919,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 		}
 		if e := profileElement.FindElement("MetadataConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
-			tokenString := fmt.Sprintf("%v", token)
+			tokenString := fmt.Sprintf("%s", token)
 			profile.MetadataConfiguration.Token = tokenString
 
 			if e1 := e.FindElement("Name"); e1 != nil {
@@ -1015,7 +1015,7 @@ func (dev *Device) DecodePresets(data []byte) ([]PTZPreset, error) {
 		preset := PTZPreset{}
 
 		token := presetElement.SelectAttrValue("token", "")
-		tokenString := fmt.Sprintf("%v", token)
+		tokenString := fmt.Sprintf("%s", token)
 		preset.Token = tokenString
 
 		if e := presetElement.FindElement("Name"); e != nil {

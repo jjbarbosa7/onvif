@@ -64,13 +64,18 @@ func NewSecurity(username, passwd string, timeDiff time.Duration) Security {
 	nonceSeq := generateNonce()                                     // Generate proper Base64-encoded Nonce
 	created := time.Now().Add(-timeDiff).UTC().Format(time.RFC3339) // Ensure no milliseconds
 
+	// wsPassword := ""
+	// if passwd != "" {
+	wsPassword := generateTokenBase64(nonceSeq, created, passwd)
+	// }
+
 	security := Security{
 		MustUnderstand: "1",
 		Auth: wsAuth{
 			Username: username,
 			Password: password{
 				Type:     passwordType,
-				Password: generateTokenBase64(nonceSeq, created, passwd),
+				Password: wsPassword,
 			},
 			Nonce: nonce{
 				Type:  encodingType,
