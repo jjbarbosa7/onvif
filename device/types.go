@@ -20,6 +20,14 @@ type GetSystemDateAndTime struct {
 	XMLName string `xml:"tds:GetSystemDateAndTime"`
 }
 
+type GetDeviceInformation struct {
+	XMLName string `xml:"tds:GetDeviceInformation"`
+}
+
+type GetDeviceInformationResponse struct {
+	DevideInformation xsd_onvif.DeviceInformation
+}
+
 type GetSystemDateAndTimeResponse struct {
 	SystemDateAndTime xsd_onvif.SystemDateTime
 }

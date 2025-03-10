@@ -26,6 +26,14 @@ type SystemDateTime struct {
 	Extension       map[string]string `bson:"extension" json:"-"`
 }
 
+type DeviceInformation struct {
+	Manufacturer    string `bson:"manufacturer" json:"manufacturer"`
+	Model           string `bson:"model" json:"model"`
+	FirmwareVersion string `bson:"firmwareVersion" json:"firmwareVersion"`
+	SerialNumber    string `bson:"serialNumber" json:"serialNumber"`
+	HardwareId      string `bson:"hardwareId" json:"hardwareId"`
+}
+
 type IntRectangle struct {
 	X      int `bson:"x" json:"x"`
 	Y      int `bson:"y" json:"y"`

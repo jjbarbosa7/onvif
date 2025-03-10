@@ -1143,6 +1143,14 @@ type SystemDateTime struct {
 	Extension       SystemDateTimeExtension
 }
 
+type DeviceInformation struct {
+	Manufacturer    string `xml:"onvif:Manufacturer"`
+	Model           string `xml:"onvif:Model"`
+	FirmwareVersion string `xml:"onvif:FirmwareVersion"`
+	SerialNumber    string `xml:"onvif:SerialNumber"`
+	HardwareId      string `xml:"onvif:HardwareId"`
+}
+
 type SystemDateTimeExtension xsd.AnyType
 
 type FactoryDefaultType xsd.String

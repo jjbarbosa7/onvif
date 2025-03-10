@@ -118,6 +118,34 @@ func (dev *Device) DecodeSystemDateTime(data []byte) (*SystemDateTime, error) {
 	return &systemDateTime, nil
 }
 
+func (dev *Device) DecodeDeviceInformation(data []byte) (*DeviceInformation, error) {
+	doc := etree.NewDocument()
+
+	if err := doc.ReadFromBytes(data); err != nil {
+		return nil, err
+	}
+
+	deviceInformation := DeviceInformation{}
+
+	if e := doc.FindElement("./Envelope/Body/GetDeviceInformationResponse/Manufacturer"); e != nil {
+		deviceInformation.Manufacturer = e.Text()
+	}
+	if e := doc.FindElement("./Envelope/Body/GetDeviceInformationResponse/Model"); e != nil {
+		deviceInformation.Model = e.Text()
+	}
+	if e := doc.FindElement("./Envelope/Body/GetDeviceInformationResponse/FirmwareVersion"); e != nil {
+		deviceInformation.FirmwareVersion = e.Text()
+	}
+	if e := doc.FindElement("./Envelope/Body/GetDeviceInformationResponse/SerialNumber"); e != nil {
+		deviceInformation.SerialNumber = e.Text()
+	}
+	if e := doc.FindElement("./Envelope/Body/GetDeviceInformationResponse/HardwareId"); e != nil {
+		deviceInformation.HardwareId = e.Text()
+	}
+
+	return &deviceInformation, nil
+}
+
 func (dev *Device) DecodeCapabilities(data []byte) (*Capabilities, error) {
 	doc := etree.NewDocument()
 
@@ -294,8 +322,7 @@ func (dev *Device) DecodePTZNode(data []byte) (*PTZNode, error) {
 	}
 
 	token := node.SelectAttrValue("token", "")
-	tokenString := fmt.Sprintf("%s", token)
-	ptzNode.Token = tokenString
+	ptzNode.Token = token
 	if e := node.FindElement("Name"); e != nil {
 		ptzNode.Name = e.Text()
 	}
@@ -461,8 +488,7 @@ func (dev *Device) DecodePTZConfiguration(data []byte) (*PTZConfiguration, error
 	}
 
 	token := configuration.SelectAttrValue("token", "")
-	tokenString := fmt.Sprintf("%s", token)
-	ptzConfiguration.Token = tokenString
+	ptzConfiguration.Token = token
 
 	if e := configuration.FindElement("Name"); e != nil {
 		ptzConfiguration.Name = e.Text()
@@ -573,17 +599,14 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 		profile := Profile{}
 
 		token := profileElement.SelectAttrValue("token", "")
-		tokenString := fmt.Sprintf("%s", token)
-		profile.Token = tokenString
+		profile.Token = token
 
 		fixed := profileElement.SelectAttrValue("fixed", "")
-		fixedString := fmt.Sprintf("%s", fixed)
-		profile.Fixed = fixedString == "true"
+		profile.Fixed = fixed == "true"
 
 		if e := profileElement.FindElement("VideoSourceConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
-			tokenString := fmt.Sprintf("%s", token)
-			profile.VideoSourceConfiguration.Token = tokenString
+			profile.VideoSourceConfiguration.Token = token
 
 			if e1 := e.FindElement("Name"); e1 != nil {
 				profile.VideoSourceConfiguration.Name = e1.Text()
@@ -614,8 +637,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 		}
 		if e := profileElement.FindElement("AudioSourceConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
-			tokenString := fmt.Sprintf("%s", token)
-			profile.AudioSourceConfiguration.Token = tokenString
+			profile.AudioSourceConfiguration.Token = token
 
 			if e1 := e.FindElement("Name"); e1 != nil {
 				profile.AudioSourceConfiguration.Name = e1.Text()
@@ -629,8 +651,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 		}
 		if e := profileElement.FindElement("VideoEncoderConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
-			tokenString := fmt.Sprintf("%s", token)
-			profile.VideoEncoderConfiguration.Token = tokenString
+			profile.VideoEncoderConfiguration.Token = token
 
 			if e1 := e.FindElement("Name"); e1 != nil {
 				profile.VideoEncoderConfiguration.Name = e1.Text()
@@ -710,8 +731,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 		}
 		if e := profileElement.FindElement("AudioEncoderConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
-			tokenString := fmt.Sprintf("%s", token)
-			profile.AudioEncoderConfiguration.Token = tokenString
+			profile.AudioEncoderConfiguration.Token = token
 
 			if e1 := e.FindElement("Name"); e1 != nil {
 				profile.AudioEncoderConfiguration.Name = e1.Text()
@@ -759,8 +779,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 		}
 		if e := profileElement.FindElement("VideoAnalyticsConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
-			tokenString := fmt.Sprintf("%s", token)
-			profile.VideoAnalyticsConfiguration.Token = tokenString
+			profile.VideoAnalyticsConfiguration.Token = token
 
 			if e1 := e.FindElement("Name"); e1 != nil {
 				profile.VideoAnalyticsConfiguration.Name = e1.Text()
@@ -821,8 +840,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 		}
 		if e := profileElement.FindElement("PTZConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
-			tokenString := fmt.Sprintf("%s", token)
-			profile.PTZConfiguration.Token = tokenString
+			profile.PTZConfiguration.Token = token
 
 			if e1 := e.FindElement("Name"); e1 != nil {
 				profile.PTZConfiguration.Name = e1.Text()
@@ -919,8 +937,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 		}
 		if e := profileElement.FindElement("MetadataConfiguration"); e != nil {
 			token := profileElement.SelectAttrValue("token", "")
-			tokenString := fmt.Sprintf("%s", token)
-			profile.MetadataConfiguration.Token = tokenString
+			profile.MetadataConfiguration.Token = token
 
 			if e1 := e.FindElement("Name"); e1 != nil {
 				profile.MetadataConfiguration.Name = e1.Text()
@@ -1015,8 +1032,7 @@ func (dev *Device) DecodePresets(data []byte) ([]PTZPreset, error) {
 		preset := PTZPreset{}
 
 		token := presetElement.SelectAttrValue("token", "")
-		tokenString := fmt.Sprintf("%s", token)
-		preset.Token = tokenString
+		preset.Token = token
 
 		if e := presetElement.FindElement("Name"); e != nil {
 			preset.Name = e.Text()
