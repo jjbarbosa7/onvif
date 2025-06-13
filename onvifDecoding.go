@@ -1137,6 +1137,25 @@ func (dev *Device) DecodeSetPreset(data []byte) (*string, error) {
 	return &presetToken, nil
 }
 
+// DecodeSystemReset decodes the 'message' response from a SystemReboot request.
+func (dev *Device) DecodeSystemReset(data []byte) (*string, error) {
+	doc := etree.NewDocument()
+
+	if err := doc.ReadFromBytes(data); err != nil {
+		return nil, err
+	}
+
+	messageElement := doc.FindElement("./Envelope/Body/SystemRebootResponse/Message")
+	if messageElement == nil {
+		return nil, fmt.Errorf("Message element not found")
+	}
+	message := messageElement.Text()
+	if message == "" {
+		return nil, fmt.Errorf("Message is empty")
+	}
+	return &message, nil
+}
+
 func (dev *Device) GetFault(data []byte) (bool, string, error) {
 	doc := etree.NewDocument()
 
