@@ -542,8 +542,8 @@ type GetVideoSourceConfigurationOptionsResponse struct {
 
 type GetVideoEncoderConfigurationOptions struct {
 	XMLName            string                   `xml:"trt:GetVideoEncoderConfigurationOptions"`
-	ProfileToken       xsd_onvif.ReferenceToken `xml:"trt:ProfileToken"`
-	ConfigurationToken xsd_onvif.ReferenceToken `xml:"trt:ConfigurationToken"`
+	ProfileToken       xsd_onvif.ReferenceToken `xml:"trt:ProfileToken,omitempty"`
+	ConfigurationToken xsd_onvif.ReferenceToken `xml:"trt:ConfigurationToken,omitempty"`
 }
 
 type GetVideoEncoderConfigurationOptionsResponse struct {

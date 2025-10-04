@@ -431,12 +431,28 @@ type VideoEncoderConfiguration struct {
 	SessionTimeout xsd.Duration           `xml:"onvif:SessionTimeout"`
 }
 
+// enum VideoEncoding
 type VideoEncoding xsd.String
 
+// JPEG
+// MPEG4
+// H264
+
+// VideoRateControl (Media v10).
+// Clamp all values to GetVideoEncoderConfigurationOptions.(FrameRateRange|EncodingIntervalRange|BitrateRange).
 type VideoRateControl struct {
-	FrameRateLimit   xsd.Int `xml:"onvif:FrameRateLimit"`
+	// FrameRateLimit: maximum encoded frame rate (frames per second).
+	// Example: 30 limits output to 30 fps.
+	FrameRateLimit xsd.Int `xml:"onvif:FrameRateLimit"`
+
+	// EncodingInterval: encode every N-th frame (frame subsampling).
+	// 1 = encode every frame; 2 = every second frame, etc.
+	// Effective fps ≈ FrameRateLimit / N. Not the GOP length (use H264/MPEG4 GovLength).
 	EncodingInterval xsd.Int `xml:"onvif:EncodingInterval"`
-	BitrateLimit     xsd.Int `xml:"onvif:BitrateLimit"`
+
+	// BitrateLimit: target maximum average bitrate in kilobits per second.
+	// Must be within Options.BitrateRange; device may coerce to supported steps.
+	BitrateLimit xsd.Int `xml:"onvif:BitrateLimit"`
 }
 
 type Mpeg4Configuration struct {
@@ -444,14 +460,24 @@ type Mpeg4Configuration struct {
 	Mpeg4Profile Mpeg4Profile `xml:"onvif:Mpeg4Profile"`
 }
 
+// enum Mpeg4Profile
 type Mpeg4Profile xsd.String
+
+// Simple
+// AdvancedSimple
+// Advanced
 
 type H264Configuration struct {
 	GovLength   xsd.Int     `xml:"onvif:GovLength"`
 	H264Profile H264Profile `xml:"onvif:H264Profile"`
 }
 
+// enum H264Profile
 type H264Profile xsd.String
+
+// Baseline
+// Main
+// High
 
 type MulticastConfiguration struct {
 	Address   IPAddress   `xml:"onvif:Address"`
@@ -812,7 +838,12 @@ type StreamSetup struct {
 	Transport Transport  `xml:"onvif:Transport"`
 }
 
+// enum
 type StreamType xsd.String
+
+// Media (ver10) valid values for StreamType:
+// RTP-Unicast
+// RTP-Multicast
 
 type Transport struct {
 	Protocol TransportProtocol `xml:"onvif:Protocol"`
@@ -821,6 +852,24 @@ type Transport struct {
 
 // enum
 type TransportProtocol xsd.String
+
+// Media (ver10) valid values for Transport.Protocol:
+// UDP
+// HTTP
+// RTSP
+// TCP (legacy RTP/TCP; deprecated. Prefer RTSP for RTP-over-TCP).
+
+// Media2 (ver20) valid values for Protocol in GetStreamUri:
+// RtspUnicast
+// RtspMulticast
+// RTSP
+// RtspsUnicast
+// RtspsMulticast
+// RtspOverHttp
+
+// Notes:
+// Multicast in Media ver10 uses StreamType=RTP_multicast with Transport.Protocol=UDP.
+// RtspOverHttp must return a URI on the device’s web-service port.
 
 type MediaUri struct {
 	Uri                 xsd.AnyURI

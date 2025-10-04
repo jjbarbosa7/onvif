@@ -90,6 +90,7 @@ func getTimeDurationFromXsdDuration(xsdDuration *etree.Element) (TimeDuration, e
 	return timeDuration, nil
 }
 
+// Decode GetSystemDateAndTimeResponse
 func (dev *Device) DecodeSystemDateTime(data []byte) (*SystemDateTime, error) {
 	doc := etree.NewDocument()
 
@@ -118,6 +119,7 @@ func (dev *Device) DecodeSystemDateTime(data []byte) (*SystemDateTime, error) {
 	return &systemDateTime, nil
 }
 
+// Decode GetDeviceInformationResponse
 func (dev *Device) DecodeDeviceInformation(data []byte) (*DeviceInformation, error) {
 	doc := etree.NewDocument()
 
@@ -146,6 +148,7 @@ func (dev *Device) DecodeDeviceInformation(data []byte) (*DeviceInformation, err
 	return &deviceInformation, nil
 }
 
+// Decode GetCapabilitiesResponse
 func (dev *Device) DecodeCapabilities(data []byte) (*Capabilities, error) {
 	doc := etree.NewDocument()
 
@@ -307,6 +310,304 @@ func (dev *Device) DecodeCapabilities(data []byte) (*Capabilities, error) {
 	return &capabilities, nil
 }
 
+// Decode DecodeVideoSourceConfigurationsResponse
+func (dev *Device) DecodeVideoSourceConfigurations(data []byte) ([]VideoSourceConfiguration, error) {
+	doc := etree.NewDocument()
+	if err := doc.ReadFromBytes(data); err != nil {
+		return nil, err
+	}
+	configurations := make([]VideoSourceConfiguration, 0)
+
+	for _, configElement := range doc.FindElements("./Envelope/Body/GetVideoSourceConfigurationsResponse/Configurations") {
+		config := VideoSourceConfiguration{}
+		token := configElement.SelectAttrValue("token", "")
+		config.Token = token
+		if e := configElement.FindElement("Name"); e != nil {
+			config.Name = e.Text()
+		}
+		if e := configElement.FindElement("UseCount"); e != nil {
+			config.UseCount, _ = strconv.Atoi(e.Text())
+		}
+		if e := configElement.FindElement("SourceToken"); e != nil {
+			config.SourceToken = e.Text()
+		}
+		if e := configElement.FindElement("Bounds"); e != nil {
+			if xElem := e.FindElement("x"); xElem != nil {
+				config.Bounds.X, _ = strconv.Atoi(xElem.Text())
+			}
+			if yElem := e.FindElement("y"); yElem != nil {
+				config.Bounds.Y, _ = strconv.Atoi(yElem.Text())
+			}
+			if widthElem := e.FindElement("width"); widthElem != nil {
+				config.Bounds.Width, _ = strconv.Atoi(widthElem.Text())
+			}
+			if heightElem := e.FindElement("height"); heightElem != nil {
+				config.Bounds.Height, _ = strconv.Atoi(heightElem.Text())
+			}
+		}
+
+		configurations = append(configurations, config)
+	}
+
+	return configurations, nil
+}
+
+// Decode GetVideoEncoderConfigurationsResponse
+func (dev *Device) DecodeVideoEncoderConfigurations(data []byte) ([]VideoEncoderConfiguration, error) {
+	doc := etree.NewDocument()
+
+	if err := doc.ReadFromBytes(data); err != nil {
+		return nil, err
+	}
+
+	configurations := make([]VideoEncoderConfiguration, 0)
+
+	for _, configElement := range doc.FindElements("./Envelope/Body/GetVideoEncoderConfigurationsResponse/Configurations") {
+		config := VideoEncoderConfiguration{}
+
+		token := configElement.SelectAttrValue("token", "")
+		config.Token = token
+
+		if e := configElement.FindElement("Name"); e != nil {
+			config.Name = e.Text()
+		}
+		if e := configElement.FindElement("Encoding"); e != nil {
+			config.Encoding = e.Text()
+		}
+		if e := configElement.FindElement("Resolution"); e != nil {
+			var res VideoResolution
+			if widthElem := e.FindElement("Width"); widthElem != nil {
+				res.Width, _ = strconv.Atoi(widthElem.Text())
+			}
+			if heightElem := e.FindElement("Height"); heightElem != nil {
+				res.Height, _ = strconv.Atoi(heightElem.Text())
+			}
+			config.Resolution = res
+		}
+		if e := configElement.FindElement("Quality"); e != nil {
+			config.Quality, _ = strconv.ParseFloat(e.Text(), 64)
+		}
+		if e := configElement.FindElement("RateControl"); e != nil {
+			if e1 := e.FindElement("FrameRateLimit"); e1 != nil {
+				config.RateControl.FrameRateLimit, _ = strconv.Atoi(e1.Text())
+			}
+			if e1 := e.FindElement("EncodingInterval"); e1 != nil {
+				config.RateControl.EncodingInterval, _ = strconv.Atoi(e1.Text())
+			}
+			if e1 := e.FindElement("BitrateLimit"); e1 != nil {
+				config.RateControl.BitrateLimit, _ = strconv.Atoi(e1.Text())
+			}
+		}
+		if e := configElement.FindElement("MPEG4"); e != nil {
+			if e1 := e.FindElement("GovLength"); e1 != nil {
+				config.MPEG4.GovLength, _ = strconv.Atoi(e1.Text())
+			}
+			if e1 := e.FindElement("Mpeg4Profile"); e1 != nil {
+				config.MPEG4.Mpeg4Profile = e1.Text()
+			}
+		}
+		if e := configElement.FindElement("H264"); e != nil {
+			if e1 := e.FindElement("GovLength"); e1 != nil {
+				config.H264.GovLength, _ = strconv.Atoi(e1.Text())
+			}
+			if e1 := e.FindElement("H264Profile"); e1 != nil {
+				config.H264.H264Profile = e1.Text()
+			}
+		}
+		if e := configElement.FindElement("Multicast"); e != nil {
+			if e1 := e.FindElement("Address"); e1 != nil {
+				if e2 := e1.FindElement("Type"); e2 != nil {
+					config.Multicast.Address.Type = e2.Text()
+				}
+				if e2 := e1.FindElement("IPv4Address"); e2 != nil {
+					config.Multicast.Address.IPv4Address = e2.Text()
+				}
+				if e2 := e1.FindElement("IPv6Address"); e2 != nil {
+					config.Multicast.Address.IPv6Address = e2.Text()
+				}
+			}
+			if e1 := e.FindElement("Port"); e1 != nil {
+				config.Multicast.Port, _ = strconv.Atoi(e1.Text())
+			}
+			if e1 := e.FindElement("TTL"); e1 != nil {
+				config.Multicast.TTL, _ = strconv.Atoi(e1.Text())
+			}
+			if e1 := e.FindElement("AutoStart"); e1 != nil {
+				config.Multicast.AutoStart = e1.Text() == "true"
+			}
+		}
+		if e := configElement.FindElement("SessionTimeout"); e != nil {
+			sessionTimeout, err := getTimeDurationFromXsdDuration(e)
+			if err == nil {
+				config.SessionTimeout = sessionTimeout
+			}
+		}
+
+		configurations = append(configurations, config)
+	}
+
+	return configurations, nil
+}
+
+// Decode GetVideoEncoderConfigurationOptionsResponse
+func (dev *Device) DecodeVideoEncoderConfigurationOptions(data []byte) (*VideoEncoderConfigurationOptions, error) {
+	doc := etree.NewDocument()
+	if err := doc.ReadFromBytes(data); err != nil {
+		return nil, err
+	}
+	optionsElement := doc.FindElement("./Envelope/Body/GetVideoEncoderConfigurationOptionsResponse/Options")
+	if optionsElement == nil {
+		return nil, fmt.Errorf("options element not found")
+	}
+	options := VideoEncoderConfigurationOptions{}
+
+	if e := optionsElement.FindElement("QualityRange"); e != nil {
+		var ir IntRange
+		if minElem := e.FindElement("Min"); minElem != nil {
+			ir.Min, _ = strconv.Atoi(minElem.Text())
+		}
+		if maxElem := e.FindElement("Max"); maxElem != nil {
+			ir.Max, _ = strconv.Atoi(maxElem.Text())
+		}
+		options.QualityRange = ir
+	}
+	if e := optionsElement.FindElement("JPEG"); e != nil {
+		for _, resElem := range e.FindElements("ResolutionsAvailable") {
+			var res VideoResolution
+			if widthElem := resElem.FindElement("Width"); widthElem != nil {
+				res.Width, _ = strconv.Atoi(widthElem.Text())
+			}
+			if heightElem := resElem.FindElement("Height"); heightElem != nil {
+				res.Height, _ = strconv.Atoi(heightElem.Text())
+			}
+			options.JPEG.ResolutionsAvailable = append(options.JPEG.ResolutionsAvailable, res)
+		}
+		if e1 := e.FindElement("FrameRateRange"); e1 != nil {
+			var frRange IntRange
+			if minElem := e1.FindElement("Min"); minElem != nil {
+				frRange.Min, _ = strconv.Atoi(minElem.Text())
+			}
+			if maxElem := e1.FindElement("Max"); maxElem != nil {
+				frRange.Max, _ = strconv.Atoi(maxElem.Text())
+			}
+			options.JPEG.FrameRateRange = frRange
+		}
+		if e1 := e.FindElement("EncodingIntervalRange"); e1 != nil {
+			var eiRange IntRange
+			if minElem := e1.FindElement("Min"); minElem != nil {
+				eiRange.Min, _ = strconv.Atoi(minElem.Text())
+			}
+			if maxElem := e1.FindElement("Max"); maxElem != nil {
+				eiRange.Max, _ = strconv.Atoi(maxElem.Text())
+			}
+			options.JPEG.EncodingIntervalRange = eiRange
+		}
+	}
+	if e := optionsElement.FindElement("MPEG4"); e != nil {
+		for _, resElem := range e.FindElements("ResolutionsAvailable") {
+			var res VideoResolution
+			if widthElem := resElem.FindElement("Width"); widthElem != nil {
+				res.Width, _ = strconv.Atoi(widthElem.Text())
+			}
+			if heightElem := resElem.FindElement("Height"); heightElem != nil {
+				res.Height, _ = strconv.Atoi(heightElem.Text())
+			}
+			options.MPEG4.ResolutionsAvailable = append(options.MPEG4.ResolutionsAvailable, res)
+		}
+		if e1 := e.FindElement("GovLengthRange"); e1 != nil {
+			var govRange IntRange
+			if minElem := e1.FindElement("Min"); minElem != nil {
+				govRange.Min, _ = strconv.Atoi(minElem.Text())
+			}
+			if maxElem := e1.FindElement("Max"); maxElem != nil {
+				govRange.Max, _ = strconv.Atoi(maxElem.Text())
+			}
+			options.MPEG4.GovLengthRange = govRange
+		}
+		if e1 := e.FindElement("FrameRateRange"); e1 != nil {
+			var frRange IntRange
+			if minElem := e1.FindElement("Min"); minElem != nil {
+				frRange.Min, _ = strconv.Atoi(minElem.Text())
+			}
+			if maxElem := e1.FindElement("Max"); maxElem != nil {
+				frRange.Max, _ = strconv.Atoi(maxElem.Text())
+			}
+			options.MPEG4.FrameRateRange = frRange
+		}
+		if e1 := e.FindElement("BitrateRange"); e1 != nil {
+			var brRange IntRange
+			if minElem := e1.FindElement("Min"); minElem != nil {
+				brRange.Min, _ = strconv.Atoi(minElem.Text())
+			}
+			if maxElem := e1.FindElement("Max"); maxElem != nil {
+				brRange.Max, _ = strconv.Atoi(maxElem.Text())
+			}
+			options.MPEG4.BitrateRange = brRange
+		}
+		for _, profileElem := range e.FindElements("Mpeg4ProfilesSupported") {
+			options.MPEG4.Mpeg4ProfilesSupported = append(options.MPEG4.Mpeg4ProfilesSupported, profileElem.Text())
+		}
+	}
+	if e := optionsElement.FindElement("H264"); e != nil {
+		for _, resElem := range e.FindElements("ResolutionsAvailable") {
+			var res VideoResolution
+			if widthElem := resElem.FindElement("Width"); widthElem != nil {
+				res.Width, _ = strconv.Atoi(widthElem.Text())
+			}
+			if heightElem := resElem.FindElement("Height"); heightElem != nil {
+				res.Height, _ = strconv.Atoi(heightElem.Text())
+			}
+			options.H264.ResolutionsAvailable = append(options.H264.ResolutionsAvailable, res)
+		}
+		if e1 := e.FindElement("GovLengthRange"); e1 != nil {
+			var govRange IntRange
+			if minElem := e1.FindElement("Min"); minElem != nil {
+				govRange.Min, _ = strconv.Atoi(minElem.Text())
+			}
+			if maxElem := e1.FindElement("Max"); maxElem != nil {
+				govRange.Max, _ = strconv.Atoi(maxElem.Text())
+			}
+			options.H264.GovLengthRange = govRange
+		}
+		if e1 := e.FindElement("FrameRateRange"); e1 != nil {
+			var frRange IntRange
+			if minElem := e1.FindElement("Min"); minElem != nil {
+				frRange.Min, _ = strconv.Atoi(minElem.Text())
+			}
+			if maxElem := e1.FindElement("Max"); maxElem != nil {
+				frRange.Max, _ = strconv.Atoi(maxElem.Text())
+			}
+			options.H264.FrameRateRange = frRange
+		}
+		if e1 := e.FindElement("BitrateRange"); e1 != nil {
+			var brRange IntRange
+			if minElem := e1.FindElement("Min"); minElem != nil {
+				brRange.Min, _ = strconv.Atoi(minElem.Text())
+			}
+			if maxElem := e1.FindElement("Max"); maxElem != nil {
+				brRange.Max, _ = strconv.Atoi(maxElem.Text())
+			}
+			options.H264.BitrateRange = brRange
+		}
+		if e1 := e.FindElement("EncodingIntervalRange"); e1 != nil {
+			var eiRange IntRange
+			if minElem := e1.FindElement("Min"); minElem != nil {
+				eiRange.Min, _ = strconv.Atoi(minElem.Text())
+			}
+			if maxElem := e1.FindElement("Max"); maxElem != nil {
+				eiRange.Max, _ = strconv.Atoi(maxElem.Text())
+			}
+			options.H264.EncodingIntervalRange = eiRange
+		}
+		for _, profileElem := range e.FindElements("H264ProfilesSupported") {
+			options.H264.H264ProfilesSupported = append(options.H264.H264ProfilesSupported, profileElem.Text())
+		}
+	}
+
+	return &options, nil
+}
+
+// DecodePTZNode decodes the PTZNode from the ONVIF response.
 func (dev *Device) DecodePTZNode(data []byte) (*PTZNode, error) {
 	doc := etree.NewDocument()
 
@@ -473,6 +774,7 @@ func (dev *Device) DecodePTZNode(data []byte) (*PTZNode, error) {
 	return &ptzNode, nil
 }
 
+// Decode GetConfigurationResponse
 func (dev *Device) DecodePTZConfiguration(data []byte) (*PTZConfiguration, error) {
 	doc := etree.NewDocument()
 
@@ -586,6 +888,7 @@ func (dev *Device) DecodePTZConfiguration(data []byte) (*PTZConfiguration, error
 	return &ptzConfiguration, nil
 }
 
+// Decode GetProfilesResponse
 func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 	doc := etree.NewDocument()
 
@@ -1019,6 +1322,464 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 	return profiles, nil
 }
 
+// Decode GetProfileResponse
+func (dev *Device) DecodeProfile(data []byte) (*Profile, error) {
+	doc := etree.NewDocument()
+	if err := doc.ReadFromBytes(data); err != nil {
+		return nil, err
+	}
+	profileElement := doc.FindElement("./Envelope/Body/GetProfileResponse/Profile")
+	if profileElement == nil {
+		return nil, fmt.Errorf("Profile element not found")
+	}
+
+	profile := Profile{}
+
+	token := profileElement.SelectAttrValue("token", "")
+	profile.Token = token
+
+	fixed := profileElement.SelectAttrValue("fixed", "")
+	profile.Fixed = fixed == "true"
+
+	if e := profileElement.FindElement("VideoSourceConfiguration"); e != nil {
+		token := profileElement.SelectAttrValue("token", "")
+		profile.VideoSourceConfiguration.Token = token
+
+		if e1 := e.FindElement("Name"); e1 != nil {
+			profile.VideoSourceConfiguration.Name = e1.Text()
+		}
+		if e1 := e.FindElement("UseCount"); e1 != nil {
+			profile.VideoSourceConfiguration.UseCount, _ = strconv.Atoi(e1.Text())
+		}
+		if e1 := e.FindElement("ViewMode"); e1 != nil {
+			profile.VideoSourceConfiguration.ViewMode = e1.Text()
+		}
+		if e1 := e.FindElement("SourceToken"); e1 != nil {
+			profile.VideoSourceConfiguration.SourceToken = e1.Text()
+		}
+		if e1 := e.FindElement("Bounds"); e1 != nil {
+			if e2 := e1.FindElement("x"); e2 != nil {
+				profile.VideoSourceConfiguration.Bounds.X, _ = strconv.Atoi(e2.Text())
+			}
+			if e2 := e1.FindElement("y"); e2 != nil {
+				profile.VideoSourceConfiguration.Bounds.Y, _ = strconv.Atoi(e2.Text())
+			}
+			if e2 := e1.FindElement("width"); e2 != nil {
+				profile.VideoSourceConfiguration.Bounds.Width, _ = strconv.Atoi(e2.Text())
+			}
+			if e2 := e1.FindElement("height"); e2 != nil {
+				profile.VideoSourceConfiguration.Bounds.Height, _ = strconv.Atoi(e2.Text())
+			}
+		}
+	}
+	if e := profileElement.FindElement("AudioSourceConfiguration"); e != nil {
+		token := profileElement.SelectAttrValue("token", "")
+		profile.AudioSourceConfiguration.Token = token
+
+		if e1 := e.FindElement("Name"); e1 != nil {
+			profile.AudioSourceConfiguration.Name = e1.Text()
+		}
+		if e1 := e.FindElement("UseCount"); e1 != nil {
+			profile.AudioSourceConfiguration.UseCount, _ = strconv.Atoi(e1.Text())
+		}
+		if e1 := e.FindElement("SourceToken"); e1 != nil {
+			profile.AudioSourceConfiguration.SourceToken = e1.Text()
+		}
+	}
+	if e := profileElement.FindElement("VideoEncoderConfiguration"); e != nil {
+		token := profileElement.SelectAttrValue("token", "")
+		profile.VideoEncoderConfiguration.Token = token
+
+		if e1 := e.FindElement("Name"); e1 != nil {
+			profile.VideoEncoderConfiguration.Name = e1.Text()
+		}
+		if e1 := e.FindElement("UseCount"); e1 != nil {
+			profile.VideoEncoderConfiguration.UseCount, _ = strconv.Atoi(e1.Text())
+		}
+		if e1 := e.FindElement("Encoding"); e1 != nil {
+			profile.VideoEncoderConfiguration.Encoding = e1.Text()
+		}
+		if e1 := e.FindElement("Resolution"); e1 != nil {
+			if e2 := e1.FindElement("Width"); e2 != nil {
+				profile.VideoEncoderConfiguration.Resolution.Width, _ = strconv.Atoi(e2.Text())
+			}
+			if e2 := e1.FindElement("Height"); e2 != nil {
+				profile.VideoEncoderConfiguration.Resolution.Height, _ = strconv.Atoi(e2.Text())
+			}
+		}
+		if e1 := e.FindElement("Quality"); e1 != nil {
+			profile.VideoEncoderConfiguration.Quality, _ = strconv.ParseFloat(e1.Text(), 64)
+		}
+		if e1 := e.FindElement("RateControl"); e1 != nil {
+			if e2 := e1.FindElement("FrameRateLimit"); e2 != nil {
+				profile.VideoEncoderConfiguration.RateControl.FrameRateLimit, _ = strconv.Atoi(e2.Text())
+			}
+			if e2 := e1.FindElement("EncodingInterval"); e2 != nil {
+				profile.VideoEncoderConfiguration.RateControl.EncodingInterval, _ = strconv.Atoi(e2.Text())
+			}
+			if e2 := e1.FindElement("BitrateLimit"); e2 != nil {
+				profile.VideoEncoderConfiguration.RateControl.BitrateLimit, _ = strconv.Atoi(e2.Text())
+			}
+		}
+		if e1 := e.FindElement("MPEG4"); e1 != nil {
+			if e2 := e1.FindElement("GovLength"); e2 != nil {
+				profile.VideoEncoderConfiguration.MPEG4.GovLength, _ = strconv.Atoi(e2.Text())
+			}
+			if e2 := e1.FindElement("Mpeg4Profile"); e2 != nil {
+				profile.VideoEncoderConfiguration.MPEG4.Mpeg4Profile = e2.Text()
+			}
+		}
+		if e1 := e.FindElement("H264"); e1 != nil {
+			if e2 := e1.FindElement("GovLength"); e2 != nil {
+				profile.VideoEncoderConfiguration.H264.GovLength, _ = strconv.Atoi(e2.Text())
+			}
+			if e2 := e1.FindElement("H264Profile"); e2 != nil {
+				profile.VideoEncoderConfiguration.H264.H264Profile = e2.Text()
+			}
+		}
+		if e1 := e.FindElement("Multicast"); e1 != nil {
+			if e2 := e1.FindElement("Address"); e2 != nil {
+				if e3 := e2.FindElement("Type"); e3 != nil {
+					profile.VideoEncoderConfiguration.Multicast.Address.Type = e3.Text()
+				}
+				if e3 := e2.FindElement("IPv4Address"); e3 != nil {
+					profile.VideoEncoderConfiguration.Multicast.Address.IPv4Address = e3.Text()
+				}
+				if e3 := e2.FindElement("IPv6Address"); e3 != nil {
+					profile.VideoEncoderConfiguration.Multicast.Address.IPv6Address = e3.Text()
+				}
+			}
+			if e2 := e1.FindElement("Port"); e2 != nil {
+				profile.VideoEncoderConfiguration.Multicast.Port, _ = strconv.Atoi(e2.Text())
+			}
+			if e2 := e1.FindElement("TTL"); e2 != nil {
+				profile.VideoEncoderConfiguration.Multicast.TTL, _ = strconv.Atoi(e2.Text())
+			}
+			if e2 := e1.FindElement("AutoStart"); e2 != nil {
+				profile.VideoEncoderConfiguration.Multicast.AutoStart = e2.Text() == "true"
+			}
+		}
+		if e1 := e.FindElement("SessionTimeout"); e1 != nil {
+			sessionTimeout, err := getTimeDurationFromXsdDuration(e1)
+			if err == nil {
+				profile.VideoEncoderConfiguration.SessionTimeout = sessionTimeout
+			}
+		}
+	}
+	if e := profileElement.FindElement("AudioEncoderConfiguration"); e != nil {
+		token := profileElement.SelectAttrValue("token", "")
+		profile.AudioEncoderConfiguration.Token = token
+
+		if e1 := e.FindElement("Name"); e1 != nil {
+			profile.AudioEncoderConfiguration.Name = e1.Text()
+		}
+		if e1 := e.FindElement("UseCount"); e1 != nil {
+			profile.AudioEncoderConfiguration.UseCount, _ = strconv.Atoi(e1.Text())
+		}
+		if e1 := e.FindElement("Encoding"); e1 != nil {
+			profile.AudioEncoderConfiguration.Encoding = e1.Text()
+		}
+		if e1 := e.FindElement("Bitrate"); e1 != nil {
+			profile.AudioEncoderConfiguration.Bitrate, _ = strconv.Atoi(e1.Text())
+		}
+		if e1 := e.FindElement("SampleRate"); e1 != nil {
+			profile.AudioEncoderConfiguration.SampleRate, _ = strconv.Atoi(e1.Text())
+		}
+		if e1 := e.FindElement("Multicast"); e1 != nil {
+			if e2 := e1.FindElement("Address"); e2 != nil {
+				if e3 := e2.FindElement("Type"); e3 != nil {
+					profile.AudioEncoderConfiguration.Multicast.Address.Type = e3.Text()
+				}
+				if e3 := e2.FindElement("IPv4Address"); e3 != nil {
+					profile.AudioEncoderConfiguration.Multicast.Address.IPv4Address = e3.Text()
+				}
+				if e3 := e2.FindElement("IPv6Address"); e3 != nil {
+					profile.AudioEncoderConfiguration.Multicast.Address.IPv6Address = e3.Text()
+				}
+			}
+			if e2 := e1.FindElement("Port"); e2 != nil {
+				profile.AudioEncoderConfiguration.Multicast.Port, _ = strconv.Atoi(e2.Text())
+			}
+			if e2 := e1.FindElement("TTL"); e2 != nil {
+				profile.AudioEncoderConfiguration.Multicast.TTL, _ = strconv.Atoi(e2.Text())
+			}
+			if e2 := e1.FindElement("AutoStart"); e2 != nil {
+				profile.AudioEncoderConfiguration.Multicast.AutoStart = e2.Text() == "true"
+			}
+		}
+		if e1 := e.FindElement("SessionTimeout"); e1 != nil {
+			sessionTimeout, err := getTimeDurationFromXsdDuration(e1)
+			if err == nil {
+				profile.AudioEncoderConfiguration.SessionTimeout = sessionTimeout
+			}
+		}
+	}
+	if e := profileElement.FindElement("VideoAnalyticsConfiguration"); e != nil {
+		token := profileElement.SelectAttrValue("token", "")
+		profile.VideoAnalyticsConfiguration.Token = token
+
+		if e1 := e.FindElement("Name"); e1 != nil {
+			profile.VideoAnalyticsConfiguration.Name = e1.Text()
+		}
+		if e1 := e.FindElement("UseCount"); e1 != nil {
+			profile.VideoAnalyticsConfiguration.UseCount, _ = strconv.Atoi(e1.Text())
+		}
+		if e1 := e.FindElement("AnalyticsEngineConfiguration"); e1 != nil {
+			if e2 := e1.FindElement("AnalyticsModule"); e2 != nil {
+				if e3 := e2.FindElement("Name"); e3 != nil {
+					profile.VideoAnalyticsConfiguration.RuleEngineConfiguration.Rule.Name = e3.Text()
+				}
+				if e3 := e2.FindElement("Type"); e3 != nil {
+					if e4 := e3.FindElement("Namespace"); e4 != nil {
+						profile.VideoAnalyticsConfiguration.RuleEngineConfiguration.Rule.Type.Namespace = e4.Text()
+					}
+					if e4 := e3.FindElement("LocalPart"); e4 != nil {
+						profile.VideoAnalyticsConfiguration.RuleEngineConfiguration.Rule.Type.LocalPart = e4.Text()
+					}
+				}
+				if e3 := e2.FindElement("Parameters"); e3 != nil {
+					if e4 := e3.FindElement("SimpleItem"); e4 != nil {
+						profile.VideoAnalyticsConfiguration.RuleEngineConfiguration.Rule.Parameters.SimpleItem.Name = e4.SelectAttrValue("Name", "")
+						profile.VideoAnalyticsConfiguration.RuleEngineConfiguration.Rule.Parameters.SimpleItem.Value = e4.Text()
+					}
+					if e4 := e3.FindElement("ElementItem"); e4 != nil {
+						profile.VideoAnalyticsConfiguration.RuleEngineConfiguration.Rule.Parameters.ElementItem.Name = e4.SelectAttrValue("Name", "")
+					}
+				}
+			}
+
+		}
+		if e1 := e.FindElement("RuleEngineConfiguration"); e1 != nil {
+			if e2 := e1.FindElement("Rule"); e2 != nil {
+				if e3 := e2.FindElement("Name"); e3 != nil {
+					profile.VideoAnalyticsConfiguration.RuleEngineConfiguration.Rule.Name = e3.Text()
+				}
+				if e3 := e2.FindElement("Type"); e3 != nil {
+					if e4 := e3.FindElement("Namespace"); e4 != nil {
+						profile.VideoAnalyticsConfiguration.RuleEngineConfiguration.Rule.Type.Namespace = e4.Text()
+					}
+					if e4 := e3.FindElement("LocalPart"); e4 != nil {
+						profile.VideoAnalyticsConfiguration.RuleEngineConfiguration.Rule.Type.LocalPart = e4.Text()
+					}
+				}
+				if e3 := e2.FindElement("Parameters"); e3 != nil {
+					if e4 := e3.FindElement("SimpleItem"); e4 != nil {
+						profile.VideoAnalyticsConfiguration.RuleEngineConfiguration.Rule.Parameters.SimpleItem.Name = e4.SelectAttrValue("Name", "")
+						profile.VideoAnalyticsConfiguration.RuleEngineConfiguration.Rule.Parameters.SimpleItem.Value = e4.Text()
+					}
+					if e4 := e3.FindElement("ElementItem"); e4 != nil {
+						profile.VideoAnalyticsConfiguration.RuleEngineConfiguration.Rule.Parameters.ElementItem.Name = e4.SelectAttrValue("Name", "")
+					}
+				}
+			}
+
+		}
+	}
+	if e := profileElement.FindElement("PTZConfiguration"); e != nil {
+		token := profileElement.SelectAttrValue("token", "")
+		profile.PTZConfiguration.Token = token
+
+		if e1 := e.FindElement("Name"); e1 != nil {
+			profile.PTZConfiguration.Name = e1.Text()
+		}
+		if e1 := e.FindElement("UseCount"); e1 != nil {
+			profile.PTZConfiguration.UseCount, _ = strconv.Atoi(e1.Text())
+		}
+		if e1 := e.FindElement("NodeToken"); e1 != nil {
+			profile.PTZConfiguration.NodeToken = e1.Text()
+		}
+		if e1 := e.FindElement("DefaultAbsolutePantTiltPositionSpace"); e1 != nil {
+			profile.PTZConfiguration.DefaultAbsolutePantTiltPositionSpace = e1.Text()
+		}
+		if e1 := e.FindElement("DefaultAbsoluteZoomPositionSpace"); e1 != nil {
+			profile.PTZConfiguration.DefaultAbsoluteZoomPositionSpace = e1.Text()
+		}
+		if e1 := e.FindElement("DefaultRelativePanTiltTranslationSpace"); e1 != nil {
+			profile.PTZConfiguration.DefaultRelativePanTiltTranslationSpace = e1.Text()
+		}
+		if e1 := e.FindElement("DefaultRelativeZoomTranslationSpace"); e1 != nil {
+			profile.PTZConfiguration.DefaultRelativeZoomTranslationSpace = e1.Text()
+		}
+		if e1 := e.FindElement("DefaultContinuousPanTiltVelocitySpace"); e1 != nil {
+			profile.PTZConfiguration.DefaultContinuousPanTiltVelocitySpace = e1.Text()
+		}
+		if e1 := e.FindElement("DefaultContinuousZoomVelocitySpace"); e1 != nil {
+			profile.PTZConfiguration.DefaultContinuousZoomVelocitySpace = e1.Text()
+		}
+		if e1 := e.FindElement("DefaultPTZSpeed"); e1 != nil {
+			if e2 := e1.FindElement("PanTilt"); e2 != nil {
+				if e3 := e2.FindElement("space"); e3 != nil {
+					profile.PTZConfiguration.DefaultPTZSpeed.PanTilt.Space = e3.Text()
+				}
+				if e3 := e2.FindElement("x"); e3 != nil {
+					profile.PTZConfiguration.DefaultPTZSpeed.PanTilt.X, _ = strconv.ParseFloat(e3.Text(), 64)
+				}
+				if e3 := e2.FindElement("y"); e3 != nil {
+					profile.PTZConfiguration.DefaultPTZSpeed.PanTilt.Y, _ = strconv.ParseFloat(e3.Text(), 64)
+				}
+			}
+			if e2 := e1.FindElement("Zoom"); e2 != nil {
+				if e3 := e2.FindElement("space"); e3 != nil {
+					profile.PTZConfiguration.DefaultPTZSpeed.Zoom.Space = e3.Text()
+				}
+				if e3 := e2.FindElement("x"); e3 != nil {
+					profile.PTZConfiguration.DefaultPTZSpeed.Zoom.X, _ = strconv.ParseFloat(e3.Text(), 64)
+				}
+			}
+		}
+		if e1 := e.FindElement("DefaultPTZTimeout"); e1 != nil {
+			ptzTimeout, err := getTimeDurationFromXsdDuration(e1)
+			if err == nil {
+				profile.PTZConfiguration.DefaultPTZTimeout = ptzTimeout
+			}
+		}
+		if e1 := e.FindElement("PanTiltLimits"); e1 != nil {
+			if e2 := e1.FindElement("Range"); e2 != nil {
+				if e3 := e2.FindElement("URI"); e3 != nil {
+					profile.PTZConfiguration.PanTiltLimits.Range.URI = e3.Text()
+				}
+				if e3 := e2.FindElement("XRange"); e3 != nil {
+					if e4 := e3.FindElement("Min"); e4 != nil {
+						profile.PTZConfiguration.PanTiltLimits.Range.XRange.Min, _ = strconv.ParseFloat(e4.Text(), 64)
+					}
+					if e4 := e3.FindElement("Max"); e4 != nil {
+						profile.PTZConfiguration.PanTiltLimits.Range.XRange.Max, _ = strconv.ParseFloat(e4.Text(), 64)
+					}
+				}
+				if e3 := e2.FindElement("YRange"); e3 != nil {
+					if e4 := e3.FindElement("Min"); e4 != nil {
+						profile.PTZConfiguration.PanTiltLimits.Range.YRange.Min, _ = strconv.ParseFloat(e4.Text(), 64)
+					}
+					if e4 := e3.FindElement("Max"); e4 != nil {
+						profile.PTZConfiguration.PanTiltLimits.Range.YRange.Max, _ = strconv.ParseFloat(e4.Text(), 64)
+					}
+				}
+			}
+		}
+		if e1 := e.FindElement("ZoomLimits"); e1 != nil {
+			if e2 := e1.FindElement("Range"); e2 != nil {
+				if e3 := e2.FindElement("URI"); e3 != nil {
+					profile.PTZConfiguration.ZoomLimits.Range.URI = e3.Text()
+				}
+				if e3 := e2.FindElement("XRange"); e3 != nil {
+					if e4 := e3.FindElement("Min"); e4 != nil {
+						profile.PTZConfiguration.ZoomLimits.Range.XRange.Min, _ = strconv.ParseFloat(e4.Text(), 64)
+					}
+					if e4 := e3.FindElement("Max"); e4 != nil {
+						profile.PTZConfiguration.ZoomLimits.Range.XRange.Max, _ = strconv.ParseFloat(e4.Text(), 64)
+					}
+				}
+			}
+		}
+	}
+	if e := profileElement.FindElement("MetadataConfiguration"); e != nil {
+		token := profileElement.SelectAttrValue("token", "")
+		profile.MetadataConfiguration.Token = token
+
+		if e1 := e.FindElement("Name"); e1 != nil {
+			profile.MetadataConfiguration.Name = e1.Text()
+		}
+		if e1 := e.FindElement("UseCount"); e1 != nil {
+			profile.MetadataConfiguration.UseCount, _ = strconv.Atoi(e1.Text())
+		}
+		if e1 := e.FindElement("CompressionType"); e1 != nil {
+			profile.MetadataConfiguration.CompressionType = e1.Text()
+		}
+		if e1 := e.FindElement("PTZStatus"); e1 != nil {
+			if e2 := e1.FindElement("Status"); e2 != nil {
+				profile.MetadataConfiguration.PTZStatus.Status = e2.Text() == "true"
+			}
+			if e2 := e1.FindElement("Position"); e2 != nil {
+				profile.MetadataConfiguration.PTZStatus.Position = e2.Text() == "true"
+			}
+		}
+		if e1 := e.FindElement("Analytics"); e1 != nil {
+			profile.MetadataConfiguration.Analytics = e1.Text() == "true"
+		}
+		if e1 := e.FindElement("Multicast"); e1 != nil {
+			if e2 := e1.FindElement("Address"); e2 != nil {
+				if e3 := e2.FindElement("Type"); e3 != nil {
+					profile.MetadataConfiguration.Multicast.Address.Type = e3.Text()
+				}
+				if e3 := e2.FindElement("IPv4Address"); e3 != nil {
+					profile.MetadataConfiguration.Multicast.Address.IPv4Address = e3.Text()
+				}
+				if e3 := e2.FindElement("IPv6Address"); e3 != nil {
+					profile.MetadataConfiguration.Multicast.Address.IPv6Address = e3.Text()
+				}
+			}
+			if e2 := e1.FindElement("Port"); e2 != nil {
+				profile.MetadataConfiguration.Multicast.Port, _ = strconv.Atoi(e2.Text())
+			}
+			if e2 := e1.FindElement("TTL"); e2 != nil {
+				profile.MetadataConfiguration.Multicast.TTL, _ = strconv.Atoi(e2.Text())
+			}
+			if e2 := e1.FindElement("AutoStart"); e2 != nil {
+				profile.MetadataConfiguration.Multicast.AutoStart = e2.Text() == "true"
+			}
+		}
+		if e1 := e.FindElement("SessionTimeout"); e1 != nil {
+			sessionTimeout, err := getTimeDurationFromXsdDuration(e1)
+			if err == nil {
+				profile.MetadataConfiguration.SessionTimeout = sessionTimeout
+			}
+		}
+		if e1 := e.FindElement("AnalyticsEngineConfiguration"); e1 != nil {
+			if e2 := e1.FindElement("AnalyticsModule"); e2 != nil {
+				if e3 := e2.FindElement("Name"); e3 != nil {
+					profile.MetadataConfiguration.AnalyticsEngineConfiguration.AnalyticsModule.Name = e3.Text()
+				}
+				if e3 := e2.FindElement("Type"); e3 != nil {
+					if e4 := e3.FindElement("Namespace"); e4 != nil {
+						profile.MetadataConfiguration.AnalyticsEngineConfiguration.AnalyticsModule.Type.Namespace = e4.Text()
+					}
+					if e4 := e3.FindElement("LocalPart"); e4 != nil {
+						profile.MetadataConfiguration.AnalyticsEngineConfiguration.AnalyticsModule.Type.LocalPart = e4.Text()
+					}
+				}
+				if e3 := e2.FindElement("Parameters"); e3 != nil {
+					if e4 := e3.FindElement("SimpleItem"); e4 != nil {
+						profile.MetadataConfiguration.AnalyticsEngineConfiguration.AnalyticsModule.Parameters.SimpleItem.Name = e4.SelectAttrValue("Name", "")
+						profile.MetadataConfiguration.AnalyticsEngineConfiguration.AnalyticsModule.Parameters.SimpleItem.Value = e4.Text()
+					}
+					if e4 := e3.FindElement("ElementItem"); e4 != nil {
+						profile.MetadataConfiguration.AnalyticsEngineConfiguration.AnalyticsModule.Parameters.ElementItem.Name = e4.SelectAttrValue("Name", "")
+					}
+				}
+			}
+		}
+	}
+
+	return &profile, nil
+}
+
+// Decode GetStreamUriResponse
+func (dev *Device) DecodeStreamURI(data []byte) (*MediaUri, error) {
+	doc := etree.NewDocument()
+
+	if err := doc.ReadFromBytes(data); err != nil {
+		return nil, err
+	}
+	mediaURI := MediaUri{}
+
+	uri := doc.FindElement("./Envelope/Body/GetStreamUriResponse/MediaUri/Uri")
+	if uri == nil {
+		return nil, fmt.Errorf("uri element not found")
+	}
+	mediaURI.Uri = uri.Text()
+	if e := doc.FindElement("./Envelope/Body/GetStreamUriResponse/MediaUri/InvalidAfterConnect"); e != nil {
+		mediaURI.InvalidAfterConnect = e.Text() == "true"
+	}
+	if e := doc.FindElement("./Envelope/Body/GetStreamUriResponse/MediaUri/InvalidAfterReboot"); e != nil {
+		mediaURI.InvalidAfterReboot = e.Text() == "true"
+	}
+	if e := doc.FindElement("./Envelope/Body/GetStreamUriResponse/MediaUri/Timeout"); e != nil {
+		mediaURI.Timeout = TimeDuration(e.Text())
+	}
+	return &mediaURI, nil
+}
+
+// Decode GetPresetsResponse
 func (dev *Device) DecodePresets(data []byte) ([]PTZPreset, error) {
 	doc := etree.NewDocument()
 
@@ -1062,6 +1823,7 @@ func (dev *Device) DecodePresets(data []byte) ([]PTZPreset, error) {
 	return presets, nil
 }
 
+// Decode GetStatusResponse
 func (dev *Device) DecodeStatus(data []byte) (*PTZStatus, error) {
 	doc := etree.NewDocument()
 
@@ -1120,6 +1882,7 @@ func (dev *Device) DecodeStatus(data []byte) (*PTZStatus, error) {
 	return &ptzStatus, nil
 }
 
+// Decode SetPresetResponse decodes the 'PresetToken' response from a SetPreset request.
 func (dev *Device) DecodeSetPreset(data []byte) (*string, error) {
 	doc := etree.NewDocument()
 

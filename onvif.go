@@ -605,25 +605,27 @@ type VideoEncoderConfigurationOptions struct {
 }
 
 type JpegOptions struct {
-	ResolutionsAvailable  VideoResolution `bson:"resolutionsAvailable" json:"resolutionsAvailable"`
-	FrameRateRange        IntRange        `bson:"frameRateRange" json:"frameRateRange"`
-	EncodingIntervalRange IntRange        `bson:"encodingIntervalRange" json:"encodingIntervalRange"`
+	ResolutionsAvailable  []VideoResolution `bson:"resolutionsAvailable" json:"resolutionsAvailable"`
+	FrameRateRange        IntRange          `bson:"frameRateRange" json:"frameRateRange"`
+	EncodingIntervalRange IntRange          `bson:"encodingIntervalRange" json:"encodingIntervalRange"`
 }
 
 type Mpeg4Options struct {
-	ResolutionsAvailable   VideoResolution `bson:"resolutionsAvailable" json:"resolutionsAvailable"`
-	GovLengthRange         IntRange        `bson:"govLengthRange" json:"govLengthRange"`
-	FrameRateRange         IntRange        `bson:"frameRateRange" json:"frameRateRange"`
-	EncodingIntervalRange  IntRange        `bson:"encodingIntervalRange" json:"encodingIntervalRange"`
-	Mpeg4ProfilesSupported string          `bson:"mpeg4ProfilesSupported" json:"mpeg4ProfilesSupported"`
+	ResolutionsAvailable   []VideoResolution `bson:"resolutionsAvailable" json:"resolutionsAvailable"`
+	GovLengthRange         IntRange          `bson:"govLengthRange" json:"govLengthRange"`
+	FrameRateRange         IntRange          `bson:"frameRateRange" json:"frameRateRange"`
+	BitrateRange           IntRange          `bson:"bitrateRange" json:"bitrateRange"`
+	EncodingIntervalRange  IntRange          `bson:"encodingIntervalRange" json:"encodingIntervalRange"`
+	Mpeg4ProfilesSupported []string          `bson:"mpeg4ProfilesSupported" json:"mpeg4ProfilesSupported"`
 }
 
 type H264Options struct {
-	ResolutionsAvailable  VideoResolution `bson:"resolutionsAvailable" json:"resolutionsAvailable"`
-	GovLengthRange        IntRange        `bson:"govLengthRange" json:"govLengthRange"`
-	FrameRateRange        IntRange        `bson:"frameRateRange" json:"frameRateRange"`
-	EncodingIntervalRange IntRange        `bson:"encodingIntervalRange" json:"encodingIntervalRange"`
-	H264ProfilesSupported string          `bson:"h264ProfilesSupported" json:"h264ProfilesSupported"`
+	ResolutionsAvailable  []VideoResolution `bson:"resolutionsAvailable" json:"resolutionsAvailable"`
+	GovLengthRange        IntRange          `bson:"govLengthRange" json:"govLengthRange"`
+	FrameRateRange        IntRange          `bson:"frameRateRange" json:"frameRateRange"`
+	BitrateRange          IntRange          `bson:"bitrateRange" json:"bitrateRange"`
+	EncodingIntervalRange IntRange          `bson:"encodingIntervalRange" json:"encodingIntervalRange"`
+	H264ProfilesSupported []string          `bson:"h264ProfilesSupported" json:"h264ProfilesSupported"`
 }
 
 type VideoEncoderOptionsExtension struct {
