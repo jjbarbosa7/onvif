@@ -352,6 +352,48 @@ func (dev *Device) DecodeVideoSourceConfigurations(data []byte) ([]VideoSourceCo
 	return configurations, nil
 }
 
+// Decode DecodeVideoSourceConfigurationsResponse
+func (dev *Device) DecodeCompatibleVideoSourceConfigurations(data []byte) ([]VideoSourceConfiguration, error) {
+	doc := etree.NewDocument()
+	if err := doc.ReadFromBytes(data); err != nil {
+		return nil, err
+	}
+	configurations := make([]VideoSourceConfiguration, 0)
+
+	for _, configElement := range doc.FindElements("./Envelope/Body/GetCompatibleVideoSourceConfigurationsResponse/Configurations") {
+		config := VideoSourceConfiguration{}
+		token := configElement.SelectAttrValue("token", "")
+		config.Token = token
+		if e := configElement.FindElement("Name"); e != nil {
+			config.Name = e.Text()
+		}
+		if e := configElement.FindElement("UseCount"); e != nil {
+			config.UseCount, _ = strconv.Atoi(e.Text())
+		}
+		if e := configElement.FindElement("SourceToken"); e != nil {
+			config.SourceToken = e.Text()
+		}
+		if e := configElement.FindElement("Bounds"); e != nil {
+			if xElem := e.FindElement("x"); xElem != nil {
+				config.Bounds.X, _ = strconv.Atoi(xElem.Text())
+			}
+			if yElem := e.FindElement("y"); yElem != nil {
+				config.Bounds.Y, _ = strconv.Atoi(yElem.Text())
+			}
+			if widthElem := e.FindElement("width"); widthElem != nil {
+				config.Bounds.Width, _ = strconv.Atoi(widthElem.Text())
+			}
+			if heightElem := e.FindElement("height"); heightElem != nil {
+				config.Bounds.Height, _ = strconv.Atoi(heightElem.Text())
+			}
+		}
+
+		configurations = append(configurations, config)
+	}
+
+	return configurations, nil
+}
+
 // Decode GetVideoEncoderConfigurationsResponse
 func (dev *Device) DecodeVideoEncoderConfigurations(data []byte) ([]VideoEncoderConfiguration, error) {
 	doc := etree.NewDocument()
@@ -363,6 +405,103 @@ func (dev *Device) DecodeVideoEncoderConfigurations(data []byte) ([]VideoEncoder
 	configurations := make([]VideoEncoderConfiguration, 0)
 
 	for _, configElement := range doc.FindElements("./Envelope/Body/GetVideoEncoderConfigurationsResponse/Configurations") {
+		config := VideoEncoderConfiguration{}
+
+		token := configElement.SelectAttrValue("token", "")
+		config.Token = token
+
+		if e := configElement.FindElement("Name"); e != nil {
+			config.Name = e.Text()
+		}
+		if e := configElement.FindElement("Encoding"); e != nil {
+			config.Encoding = e.Text()
+		}
+		if e := configElement.FindElement("Resolution"); e != nil {
+			var res VideoResolution
+			if widthElem := e.FindElement("Width"); widthElem != nil {
+				res.Width, _ = strconv.Atoi(widthElem.Text())
+			}
+			if heightElem := e.FindElement("Height"); heightElem != nil {
+				res.Height, _ = strconv.Atoi(heightElem.Text())
+			}
+			config.Resolution = res
+		}
+		if e := configElement.FindElement("Quality"); e != nil {
+			config.Quality, _ = strconv.ParseFloat(e.Text(), 64)
+		}
+		if e := configElement.FindElement("RateControl"); e != nil {
+			if e1 := e.FindElement("FrameRateLimit"); e1 != nil {
+				config.RateControl.FrameRateLimit, _ = strconv.Atoi(e1.Text())
+			}
+			if e1 := e.FindElement("EncodingInterval"); e1 != nil {
+				config.RateControl.EncodingInterval, _ = strconv.Atoi(e1.Text())
+			}
+			if e1 := e.FindElement("BitrateLimit"); e1 != nil {
+				config.RateControl.BitrateLimit, _ = strconv.Atoi(e1.Text())
+			}
+		}
+		if e := configElement.FindElement("MPEG4"); e != nil {
+			if e1 := e.FindElement("GovLength"); e1 != nil {
+				config.MPEG4.GovLength, _ = strconv.Atoi(e1.Text())
+			}
+			if e1 := e.FindElement("Mpeg4Profile"); e1 != nil {
+				config.MPEG4.Mpeg4Profile = e1.Text()
+			}
+		}
+		if e := configElement.FindElement("H264"); e != nil {
+			if e1 := e.FindElement("GovLength"); e1 != nil {
+				config.H264.GovLength, _ = strconv.Atoi(e1.Text())
+			}
+			if e1 := e.FindElement("H264Profile"); e1 != nil {
+				config.H264.H264Profile = e1.Text()
+			}
+		}
+		if e := configElement.FindElement("Multicast"); e != nil {
+			if e1 := e.FindElement("Address"); e1 != nil {
+				if e2 := e1.FindElement("Type"); e2 != nil {
+					config.Multicast.Address.Type = e2.Text()
+				}
+				if e2 := e1.FindElement("IPv4Address"); e2 != nil {
+					config.Multicast.Address.IPv4Address = e2.Text()
+				}
+				if e2 := e1.FindElement("IPv6Address"); e2 != nil {
+					config.Multicast.Address.IPv6Address = e2.Text()
+				}
+			}
+			if e1 := e.FindElement("Port"); e1 != nil {
+				config.Multicast.Port, _ = strconv.Atoi(e1.Text())
+			}
+			if e1 := e.FindElement("TTL"); e1 != nil {
+				config.Multicast.TTL, _ = strconv.Atoi(e1.Text())
+			}
+			if e1 := e.FindElement("AutoStart"); e1 != nil {
+				config.Multicast.AutoStart = e1.Text() == "true"
+			}
+		}
+		if e := configElement.FindElement("SessionTimeout"); e != nil {
+			sessionTimeout, err := getTimeDurationFromXsdDuration(e)
+			if err == nil {
+				config.SessionTimeout = sessionTimeout
+			}
+		}
+
+		configurations = append(configurations, config)
+	}
+
+	return configurations, nil
+}
+
+// Decode GetCompatibleVideoEncoderConfigurationsResponse
+func (dev *Device) DecodeCompatibleVideoEncoderConfigurations(data []byte) ([]VideoEncoderConfiguration, error) {
+	doc := etree.NewDocument()
+
+	if err := doc.ReadFromBytes(data); err != nil {
+		return nil, err
+	}
+
+	configurations := make([]VideoEncoderConfiguration, 0)
+
+	for _, configElement := range doc.FindElements("./Envelope/Body/GetCompatibleVideoEncoderConfigurationsResponse/Configurations") {
 		config := VideoEncoderConfiguration{}
 
 		token := configElement.SelectAttrValue("token", "")
@@ -1323,12 +1462,12 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 }
 
 // Decode GetProfileResponse
-func (dev *Device) DecodeProfile(data []byte) (*Profile, error) {
+func (dev *Device) DecodeCreateProfile(data []byte) (*Profile, error) {
 	doc := etree.NewDocument()
 	if err := doc.ReadFromBytes(data); err != nil {
 		return nil, err
 	}
-	profileElement := doc.FindElement("./Envelope/Body/GetProfileResponse/Profile")
+	profileElement := doc.FindElement("./Envelope/Body/CreateProfileResponse/Profile")
 	if profileElement == nil {
 		return nil, fmt.Errorf("Profile element not found")
 	}

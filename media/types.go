@@ -65,7 +65,7 @@ type GetAudioOutputsResponse struct {
 type CreateProfile struct {
 	XMLName string                   `xml:"trt:CreateProfile"`
 	Name    xsd_onvif.Name           `xml:"trt:Name"`
-	Token   xsd_onvif.ReferenceToken `xml:"trt:Token"`
+	Token   xsd_onvif.ReferenceToken `xml:"trt:Token,omitempty"`
 }
 
 type CreateProfileResponse struct {

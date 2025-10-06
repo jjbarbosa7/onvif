@@ -212,8 +212,6 @@ func (dev *Device) GetEndpoint(name string) string {
 func (dev Device) buildMethodSOAP(msg string) (gosoap.SoapMessage, error) {
 	doc := etree.NewDocument()
 	if err := doc.ReadFromString(msg); err != nil {
-		//log.Println("Got error")
-
 		return "", err
 	}
 	element := doc.Root()
