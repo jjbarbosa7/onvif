@@ -244,7 +244,7 @@ func (dev Device) getEndpoint(endpoint string) (string, error) {
 
 // CallMethod functions call an method, defined <method> struct.
 // You should use Authenticate method to call authorized requests.
-func (dev Device) CallMethod(method interface{}, timeDiff time.Duration, httpClient *http.Client, omitSecurityHeader bool) (*http.Response, error) {
+func (dev Device) CallMethod(method any, timeDiff time.Duration, httpClient *http.Client, omitSecurityHeader bool) (*http.Response, error) {
 	pkgPath := strings.Split(reflect.TypeOf(method).PkgPath(), "/")
 	pkg := strings.ToLower(pkgPath[len(pkgPath)-1])
 
@@ -256,7 +256,7 @@ func (dev Device) CallMethod(method interface{}, timeDiff time.Duration, httpCli
 }
 
 // CallMethod functions call an method, defined <method> struct with authentication data
-func (dev Device) callMethodDo(endpoint string, method interface{}, timeDiff time.Duration, httpClient *http.Client, omitSecurityHeader bool) (*http.Response, error) {
+func (dev Device) callMethodDo(endpoint string, method any, timeDiff time.Duration, httpClient *http.Client, omitSecurityHeader bool) (*http.Response, error) {
 	output, err := xml.MarshalIndent(method, "  ", "    ")
 	if err != nil {
 		return nil, err
