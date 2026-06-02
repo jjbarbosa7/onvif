@@ -23,6 +23,7 @@ var Xlmns = map[string]string{
 	"onvif":   "http://www.onvif.org/ver10/schema",
 	"tds":     "http://www.onvif.org/ver10/device/wsdl",
 	"trt":     "http://www.onvif.org/ver10/media/wsdl",
+	"tr2":     "http://www.onvif.org/ver20/media/wsdl",
 	"tev":     "http://www.onvif.org/ver10/events/wsdl",
 	"tptz":    "http://www.onvif.org/ver20/ptz/wsdl",
 	"timg":    "http://www.onvif.org/ver20/imaging/wsdl",
@@ -52,6 +53,18 @@ const (
 	MULTI_RESPONSE_READ_BUFFER = 8192
 )
 
+// Media2Namespace is the WSDL namespace a device advertises in its GetServices
+// response when it supports ONVIF Media2 (ver20).
+const Media2Namespace = "http://www.onvif.org/ver20/media/wsdl"
+
+// MediaCodec values as they appear in a VideoEncoder Encoding element.
+type MediaCodec string
+
+const (
+	MEDIA2_CODEC_H264 MediaCodec = "H264"
+	MEDIA2_CODEC_H265 MediaCodec = "H265"
+)
+
 func (devType DeviceType) String() string {
 	stringRepresentation := []string{
 		"NetworkVideoDisplay",
@@ -72,8 +85,15 @@ func (devType DeviceType) String() string {
 // struct represents an abstract ONVIF device.
 // It contains methods, which helps to communicate with ONVIF device
 type Device struct {
-	params    DeviceParams
-	endpoints map[string]string
+	params          DeviceParams
+	endpoints       map[string]string
+	media2Supported bool
+}
+
+// Media2Supported reports whether the device advertised ONVIF Media2 (ver20)
+// support in its GetServices response.
+func (dev *Device) Media2Supported() bool {
+	return dev.media2Supported
 }
 
 type DeviceParams struct {
@@ -187,7 +207,49 @@ func NewDevice(params DeviceParams, httpClient *http.Client, omitSecurityHeader 
 		return nil, timeDiff, nil, err
 	}
 
+	// Probe for Media2 (ver20) support via the canonical GetServices operation.
+	// This is best-effort and non-fatal: older cameras may not implement
+	// GetServices at all, in which case the device simply remains Media1-only.
+	dev.detectMedia2Support(timeDiff, httpClient, omitSecurityHeader)
+
 	return dev, timeDiff, capabilities, nil
+}
+
+// detectMedia2Support calls the ONVIF GetServices operation and, if the device
+// advertises the ver20/media namespace, records Media2 support and registers
+// the media2 endpoint so Media2 requests can be routed to it. Any failure
+// (operation unsupported, transport error, decode error) leaves the device
+// Media1-only and is not propagated, since Media1 remains the fallback.
+func (dev *Device) detectMedia2Support(timeDiff time.Duration, httpClient *http.Client, omitSecurityHeader bool) {
+	getServices := device.GetServices{IncludeCapability: false}
+	resp, err := dev.CallMethod(getServices, timeDiff, httpClient, omitSecurityHeader)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		if resp != nil {
+			resp.Body.Close()
+		}
+		return
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return
+	}
+
+	services, err := dev.DecodeServices(data)
+	if err != nil {
+		return
+	}
+
+	for _, service := range services {
+		if service.Namespace == Media2Namespace {
+			dev.media2Supported = true
+			if service.XAddr != "" {
+				dev.addEndpoint("media2", service.XAddr)
+			}
+			break
+		}
+	}
 }
 
 func (dev *Device) addEndpoint(Key, Value string) {

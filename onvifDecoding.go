@@ -310,6 +310,187 @@ func (dev *Device) DecodeCapabilities(data []byte) (*Capabilities, error) {
 	return &capabilities, nil
 }
 
+// OnvifService is one entry from a GetServices response: an offered service
+// identified by its WSDL namespace, the transport address it lives at, and its
+// version. Used to detect Media2 (namespace http://www.onvif.org/ver20/media/wsdl).
+type OnvifService struct {
+	Namespace    string
+	XAddr        string
+	VersionMajor int
+	VersionMinor int
+}
+
+// DecodeServices parses a GetServices response into the list of offered
+// services. Unlike GetCapabilities, this enumerates ver20 services, so it is
+// the reliable way to discover Media2 support across vendors.
+func (dev *Device) DecodeServices(data []byte) ([]OnvifService, error) {
+	doc := etree.NewDocument()
+	if err := doc.ReadFromBytes(data); err != nil {
+		return nil, err
+	}
+
+	services := make([]OnvifService, 0)
+	for _, serviceElement := range doc.FindElements("./Envelope/Body/GetServicesResponse/Service") {
+		service := OnvifService{}
+		if e := serviceElement.FindElement("Namespace"); e != nil {
+			service.Namespace = strings.TrimSpace(e.Text())
+		}
+		if e := serviceElement.FindElement("XAddr"); e != nil {
+			service.XAddr = strings.TrimSpace(e.Text())
+		}
+		if e := serviceElement.FindElement("Version"); e != nil {
+			if e1 := e.FindElement("Major"); e1 != nil {
+				service.VersionMajor, _ = strconv.Atoi(strings.TrimSpace(e1.Text()))
+			}
+			if e1 := e.FindElement("Minor"); e1 != nil {
+				service.VersionMinor, _ = strconv.Atoi(strings.TrimSpace(e1.Text()))
+			}
+		}
+		services = append(services, service)
+	}
+
+	return services, nil
+}
+
+// DecodeProfiles2 parses a Media2 (ver20) GetProfilesResponse into the existing
+// onvif.Profile model, so the rest of the driver stays codec-agnostic. The
+// Media2 shape differs from Media1: configurations are nested under
+// <Configurations>, and <VideoEncoder> carries GovLength/Profile as attributes
+// with a unified <Encoding> element (H264/H265) rather than codec-specific
+// child elements. For H264 the GovLength/Profile attributes are written into the
+// H264 sub-struct so the result is interchangeable with the Media1 decode; for
+// H265 they populate the additive H265 sub-struct. Only the fields the driver
+// consumes (PTZ search, drift matcher, stream URI selection) are mapped.
+func (dev *Device) DecodeProfiles2(data []byte) ([]Profile, error) {
+	doc := etree.NewDocument()
+	if err := doc.ReadFromBytes(data); err != nil {
+		return nil, err
+	}
+
+	profiles := make([]Profile, 0)
+	for _, profileElement := range doc.FindElements("./Envelope/Body/GetProfilesResponse/Profiles") {
+		profile := Profile{}
+		profile.Token = profileElement.SelectAttrValue("token", "")
+		profile.Fixed = profileElement.SelectAttrValue("fixed", "") == "true"
+		if e := profileElement.FindElement("Name"); e != nil {
+			profile.Name = e.Text()
+		}
+
+		configs := profileElement.FindElement("Configurations")
+		if configs == nil {
+			profiles = append(profiles, profile)
+			continue
+		}
+
+		if e := configs.FindElement("VideoSource"); e != nil {
+			profile.VideoSourceConfiguration.Token = e.SelectAttrValue("token", "")
+			if e1 := e.FindElement("Name"); e1 != nil {
+				profile.VideoSourceConfiguration.Name = e1.Text()
+			}
+			if e1 := e.FindElement("UseCount"); e1 != nil {
+				profile.VideoSourceConfiguration.UseCount, _ = strconv.Atoi(e1.Text())
+			}
+			if e1 := e.FindElement("SourceToken"); e1 != nil {
+				profile.VideoSourceConfiguration.SourceToken = e1.Text()
+			}
+			if e1 := e.FindElement("Bounds"); e1 != nil {
+				profile.VideoSourceConfiguration.Bounds.X, _ = strconv.Atoi(e1.SelectAttrValue("x", "0"))
+				profile.VideoSourceConfiguration.Bounds.Y, _ = strconv.Atoi(e1.SelectAttrValue("y", "0"))
+				profile.VideoSourceConfiguration.Bounds.Width, _ = strconv.Atoi(e1.SelectAttrValue("width", "0"))
+				profile.VideoSourceConfiguration.Bounds.Height, _ = strconv.Atoi(e1.SelectAttrValue("height", "0"))
+			}
+		}
+
+		if e := configs.FindElement("VideoEncoder"); e != nil {
+			profile.VideoEncoderConfiguration.Token = e.SelectAttrValue("token", "")
+			govLength, _ := strconv.Atoi(e.SelectAttrValue("GovLength", "0"))
+			codecProfile := e.SelectAttrValue("Profile", "")
+
+			if e1 := e.FindElement("Name"); e1 != nil {
+				profile.VideoEncoderConfiguration.Name = e1.Text()
+			}
+			if e1 := e.FindElement("UseCount"); e1 != nil {
+				profile.VideoEncoderConfiguration.UseCount, _ = strconv.Atoi(e1.Text())
+			}
+			if e1 := e.FindElement("Encoding"); e1 != nil {
+				profile.VideoEncoderConfiguration.Encoding = e1.Text()
+			}
+			if e1 := e.FindElement("Resolution"); e1 != nil {
+				if e2 := e1.FindElement("Width"); e2 != nil {
+					profile.VideoEncoderConfiguration.Resolution.Width, _ = strconv.Atoi(e2.Text())
+				}
+				if e2 := e1.FindElement("Height"); e2 != nil {
+					profile.VideoEncoderConfiguration.Resolution.Height, _ = strconv.Atoi(e2.Text())
+				}
+			}
+			if e1 := e.FindElement("Quality"); e1 != nil {
+				profile.VideoEncoderConfiguration.Quality, _ = strconv.ParseFloat(e1.Text(), 64)
+			}
+			if e1 := e.FindElement("RateControl"); e1 != nil {
+				if e2 := e1.FindElement("FrameRateLimit"); e2 != nil {
+					profile.VideoEncoderConfiguration.RateControl.FrameRateLimit, _ = strconv.Atoi(e2.Text())
+				}
+				if e2 := e1.FindElement("EncodingInterval"); e2 != nil {
+					profile.VideoEncoderConfiguration.RateControl.EncodingInterval, _ = strconv.Atoi(e2.Text())
+				}
+				if e2 := e1.FindElement("BitrateLimit"); e2 != nil {
+					profile.VideoEncoderConfiguration.RateControl.BitrateLimit, _ = strconv.Atoi(e2.Text())
+				}
+			}
+			// Media2 carries GovLength/Profile as attributes on VideoEncoder with
+			// a unified Encoding. Route them into the matching codec sub-struct so
+			// the H264 result matches the Media1 decode and H265 is captured too.
+			switch profile.VideoEncoderConfiguration.Encoding {
+			case string(MEDIA2_CODEC_H265):
+				profile.VideoEncoderConfiguration.H265.GovLength = govLength
+				profile.VideoEncoderConfiguration.H265.H265Profile = codecProfile
+			default:
+				profile.VideoEncoderConfiguration.H264.GovLength = govLength
+				profile.VideoEncoderConfiguration.H264.H264Profile = codecProfile
+			}
+			if e1 := e.FindElement("Multicast"); e1 != nil {
+				if e2 := e1.FindElement("Address"); e2 != nil {
+					if e3 := e2.FindElement("Type"); e3 != nil {
+						profile.VideoEncoderConfiguration.Multicast.Address.Type = e3.Text()
+					}
+					if e3 := e2.FindElement("IPv4Address"); e3 != nil {
+						profile.VideoEncoderConfiguration.Multicast.Address.IPv4Address = e3.Text()
+					}
+					if e3 := e2.FindElement("IPv6Address"); e3 != nil {
+						profile.VideoEncoderConfiguration.Multicast.Address.IPv6Address = e3.Text()
+					}
+				}
+				if e2 := e1.FindElement("Port"); e2 != nil {
+					profile.VideoEncoderConfiguration.Multicast.Port, _ = strconv.Atoi(e2.Text())
+				}
+				if e2 := e1.FindElement("TTL"); e2 != nil {
+					profile.VideoEncoderConfiguration.Multicast.TTL, _ = strconv.Atoi(e2.Text())
+				}
+				if e2 := e1.FindElement("AutoStart"); e2 != nil {
+					profile.VideoEncoderConfiguration.Multicast.AutoStart = e2.Text() == "true"
+				}
+			}
+		}
+
+		if e := configs.FindElement("PTZ"); e != nil {
+			profile.PTZConfiguration.Token = e.SelectAttrValue("token", "")
+			if e1 := e.FindElement("Name"); e1 != nil {
+				profile.PTZConfiguration.Name = e1.Text()
+			}
+			if e1 := e.FindElement("UseCount"); e1 != nil {
+				profile.PTZConfiguration.UseCount, _ = strconv.Atoi(e1.Text())
+			}
+			if e1 := e.FindElement("NodeToken"); e1 != nil {
+				profile.PTZConfiguration.NodeToken = e1.Text()
+			}
+		}
+
+		profiles = append(profiles, profile)
+	}
+
+	return profiles, nil
+}
+
 // Decode DecodeVideoSourceConfigurationsResponse
 func (dev *Device) DecodeVideoSourceConfigurations(data []byte) ([]VideoSourceConfiguration, error) {
 	doc := etree.NewDocument()

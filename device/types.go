@@ -250,6 +250,16 @@ type GetCapabilitiesResponse struct {
 	Capabilities xsd_onvif.Capabilities
 }
 
+// GetServices is the canonical ONVIF operation for discovering the services a
+// device offers, including their namespace, version and transport address.
+// Unlike GetCapabilities it enumerates ver20 services (notably ver20/media,
+// i.e. Media2), which is how Media2 support is detected. The response is decoded
+// via etree (DecodeServices), so no response struct is required here.
+type GetServices struct {
+	XMLName           string      `xml:"tds:GetServices"`
+	IncludeCapability xsd.Boolean `xml:"tds:IncludeCapability"`
+}
+
 type GetHostname struct {
 	XMLName string `xml:"tds:GetHostname"`
 }

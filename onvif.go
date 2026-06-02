@@ -373,6 +373,7 @@ type VideoEncoderConfiguration struct {
 	RateControl    VideoRateControl       `bson:"rateControl" json:"rateControl"`
 	MPEG4          Mpeg4Configuration     `bson:"mpeg4" json:"mpeg4"`
 	H264           H264Configuration      `bson:"h264" json:"h264"`
+	H265           H265Configuration      `bson:"h265" json:"h265"`
 	Multicast      MulticastConfiguration `bson:"multicast" json:"multicast"`
 	SessionTimeout TimeDuration           `bson:"sessionTimeout" json:"sessionTimeout"`
 }
@@ -391,6 +392,15 @@ type Mpeg4Configuration struct {
 type H264Configuration struct {
 	GovLength   int    `bson:"govLength" json:"govLength"`
 	H264Profile string `bson:"h264Profile" json:"h264Profile"`
+}
+
+// H265Configuration mirrors H264Configuration for HEVC. Media1 has no H265
+// representation (its GetProfiles omits H265 profiles entirely); this is
+// populated only from the Media2 decode path. Additive field — safe for the
+// persisted bson/json shape.
+type H265Configuration struct {
+	GovLength   int    `bson:"govLength" json:"govLength"`
+	H265Profile string `bson:"h265Profile" json:"h265Profile"`
 }
 
 type MulticastConfiguration struct {
