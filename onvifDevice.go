@@ -166,6 +166,20 @@ func (dev *Device) getSupportedServices(resp *http.Response) (*Capabilities, err
 	return capabiities, nil
 }
 
+// callError is the cause of a failed CallMethod: the transport error when there
+// is one, otherwise the non-OK HTTP status line. NewDevice wraps it with %w so
+// callers that unwrap to the root cause see the cause alone, not the camera
+// address context (and a nil err no longer renders as "%!s(<nil>)").
+func callError(resp *http.Response, err error) error {
+	if err != nil {
+		return err
+	}
+	if resp != nil {
+		return fmt.Errorf("%s", resp.Status)
+	}
+	return fmt.Errorf("no response")
+}
+
 // NewDevice function construct a ONVIF Device entity
 func NewDevice(params DeviceParams, httpClient *http.Client, omitSecurityHeader bool) (*Device, time.Duration, *Capabilities, error) {
 	dev := new(Device)
@@ -183,12 +197,12 @@ func NewDevice(params DeviceParams, httpClient *http.Client, omitSecurityHeader 
 			resp, err = dev.CallMethod(getTime, time.Duration(0), httpClient, false)
 		}
 		if err != nil || resp.StatusCode != http.StatusOK {
-			return nil, time.Duration(0), nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetSystemDateAndTime): %s", dev.params.Xaddr, err)
+			return nil, time.Duration(0), nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetSystemDateAndTime): %w", dev.params.Xaddr, callError(resp, err))
 		}
 	}
 	timeDiff, err := dev.getTimeDiff(resp)
 	if err != nil {
-		return nil, time.Duration(0), nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetSystemDateAndTime): %s", dev.params.Xaddr, err)
+		return nil, time.Duration(0), nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetSystemDateAndTime): %w", dev.params.Xaddr, err)
 	}
 
 	getCapabilities := device.GetCapabilities{Category: "All"}
@@ -198,7 +212,7 @@ func NewDevice(params DeviceParams, httpClient *http.Client, omitSecurityHeader 
 			resp, err = dev.CallMethod(getCapabilities, timeDiff, httpClient, false)
 		}
 		if err != nil || resp.StatusCode != http.StatusOK {
-			return nil, timeDiff, nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetCapabilities): %s", dev.params.Xaddr, err)
+			return nil, timeDiff, nil, fmt.Errorf("camera is not available at %s or it does not support ONVIF services (GetCapabilities): %w", dev.params.Xaddr, callError(resp, err))
 		}
 	}
 
