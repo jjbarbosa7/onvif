@@ -15,6 +15,7 @@ import (
 	"github.com/beevik/etree"
 	"github.com/jjbarbosa7/onvif/device"
 	"github.com/jjbarbosa7/onvif/gosoap"
+	"github.com/jjbarbosa7/onvif/xsd_onvif"
 	"github.com/juju/errors"
 )
 
@@ -133,17 +134,29 @@ func (dev *Device) getTimeDiff(resp *http.Response) (time.Duration, error) {
 	return timeDiff, nil
 }
 
-func (dev *Device) getSupportedServices(resp *http.Response) (*Capabilities, error) {
+// readCapabilities decodes a GetCapabilities response. The bool reports a SOAP
+// fault in place of the answer, which some cameras send under HTTP 200.
+func (dev *Device) readCapabilities(resp *http.Response) (*Capabilities, bool, error) {
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	resp.Body.Close()
 
+	if fault, _, err := dev.GetFault(data); err == nil && fault {
+		return nil, true, nil
+	}
+
 	capabiities, err := dev.DecodeCapabilities(data)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
+	return capabiities, false, nil
+}
+
+// getSupportedServices registers the endpoint of each service capabilities
+// gives an address for.
+func (dev *Device) getSupportedServices(capabiities *Capabilities) {
 	if capabiities.Analytics.XAddr != "" {
 		dev.addEndpoint("Analytics", capabiities.Analytics.XAddr)
 	}
@@ -162,8 +175,48 @@ func (dev *Device) getSupportedServices(resp *http.Response) (*Capabilities, err
 	if capabiities.PTZ.XAddr != "" {
 		dev.addEndpoint("PTZ", capabiities.PTZ.XAddr)
 	}
+}
 
-	return capabiities, nil
+// GetCapabilitiesByCategory asks for the GetCapabilities categories the driver
+// uses one at a time, for a device that faults on "All": a CostarHD 4261
+// (firmware 2.0.1835) answers "All", and Events alone, with "Database read
+// failed" under HTTP 200, yet answers Device, Media and PTZ. A category that
+// fails or faults (PTZ on a fixed camera) stays empty, so the result is never
+// less than the fault gave. It registers no endpoint: NewDevice registers the
+// result before the device is shared, so the driver can also call this on a
+// device in use.
+func (dev *Device) GetCapabilitiesByCategory(timeDiff time.Duration, httpClient *http.Client, omitSecurityHeader bool) *Capabilities {
+	capabilities := &Capabilities{}
+	for _, category := range []xsd_onvif.CapabilityCategory{"Device", "Media", "PTZ"} {
+		getCapabilities := device.GetCapabilities{Category: category}
+		resp, err := dev.CallMethod(getCapabilities, timeDiff, httpClient, true)
+		if (err != nil || resp.StatusCode != http.StatusOK) && !omitSecurityHeader {
+			if resp != nil {
+				resp.Body.Close()
+			}
+			resp, err = dev.CallMethod(getCapabilities, timeDiff, httpClient, false)
+		}
+		if err != nil || resp.StatusCode != http.StatusOK {
+			if resp != nil {
+				resp.Body.Close()
+			}
+			continue
+		}
+
+		answer, faulted, err := dev.readCapabilities(resp)
+		if err != nil || faulted {
+			continue
+		}
+		switch category {
+		case "Device":
+			capabilities.Device = answer.Device
+		case "Media":
+			capabilities.Media = answer.Media
+		case "PTZ":
+			capabilities.PTZ = answer.PTZ
+		}
+	}
+	return capabilities
 }
 
 // callError is the cause of a failed CallMethod: the transport error when there
@@ -216,10 +269,14 @@ func NewDevice(params DeviceParams, httpClient *http.Client, omitSecurityHeader 
 		}
 	}
 
-	capabilities, err := dev.getSupportedServices(resp)
+	capabilities, faulted, err := dev.readCapabilities(resp)
 	if err != nil {
 		return nil, timeDiff, nil, err
 	}
+	if faulted {
+		capabilities = dev.GetCapabilitiesByCategory(timeDiff, httpClient, omitSecurityHeader)
+	}
+	dev.getSupportedServices(capabilities)
 
 	// Probe for Media2 (ver20) support via the canonical GetServices operation.
 	// This is best-effort and non-fatal: older cameras may not implement
