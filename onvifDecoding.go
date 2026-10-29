@@ -2,12 +2,28 @@ package onvif
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/beevik/etree"
 )
+
+// parseXsdFloat reads an xs:float as strconv.ParseFloat does, except that INF,
+// -INF and NaN, which xs:float allows and cameras report (a preset position, an
+// unbounded range), fail like a value that does not parse: JSON cannot carry
+// them, so every response holding one would fail to encode.
+func parseXsdFloat(s string, bitSize int) (float64, error) {
+	f, err := strconv.ParseFloat(s, bitSize)
+	if err != nil {
+		return 0, err
+	}
+	if math.IsNaN(f) || math.IsInf(f, 0) {
+		return 0, fmt.Errorf("non-finite xs:float: %s", s)
+	}
+	return f, nil
+}
 
 func getTimeFromXsdDateTime(xsdDateTime *etree.Element) (time.Time, error) {
 	// Find the <Time> element
@@ -424,7 +440,7 @@ func (dev *Device) DecodeProfiles2(data []byte) ([]Profile, error) {
 				}
 			}
 			if e1 := e.FindElement("Quality"); e1 != nil {
-				profile.VideoEncoderConfiguration.Quality, _ = strconv.ParseFloat(e1.Text(), 64)
+				profile.VideoEncoderConfiguration.Quality, _ = parseXsdFloat(e1.Text(), 64)
 			}
 			if e1 := e.FindElement("RateControl"); e1 != nil {
 				if e2 := e1.FindElement("FrameRateLimit"); e2 != nil {
@@ -608,7 +624,7 @@ func (dev *Device) DecodeVideoEncoderConfigurations(data []byte) ([]VideoEncoder
 			config.Resolution = res
 		}
 		if e := configElement.FindElement("Quality"); e != nil {
-			config.Quality, _ = strconv.ParseFloat(e.Text(), 64)
+			config.Quality, _ = parseXsdFloat(e.Text(), 64)
 		}
 		if e := configElement.FindElement("RateControl"); e != nil {
 			if e1 := e.FindElement("FrameRateLimit"); e1 != nil {
@@ -705,7 +721,7 @@ func (dev *Device) DecodeCompatibleVideoEncoderConfigurations(data []byte) ([]Vi
 			config.Resolution = res
 		}
 		if e := configElement.FindElement("Quality"); e != nil {
-			config.Quality, _ = strconv.ParseFloat(e.Text(), 64)
+			config.Quality, _ = parseXsdFloat(e.Text(), 64)
 		}
 		if e := configElement.FindElement("RateControl"); e != nil {
 			if e1 := e.FindElement("FrameRateLimit"); e1 != nil {
@@ -960,18 +976,18 @@ func (dev *Device) DecodePTZNode(data []byte) (*PTZNode, error) {
 			}
 			if e2 := e1.FindElement("XRange"); e2 != nil {
 				if e3 := e2.FindElement("Min"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.AbsolutePanTiltPositionSpace.XRange.Min, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.AbsolutePanTiltPositionSpace.XRange.Min, _ = parseXsdFloat(e3.Text(), 64)
 				}
 				if e3 := e2.FindElement("Max"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.AbsolutePanTiltPositionSpace.XRange.Max, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.AbsolutePanTiltPositionSpace.XRange.Max, _ = parseXsdFloat(e3.Text(), 64)
 				}
 			}
 			if e2 := e1.FindElement("YRange"); e2 != nil {
 				if e3 := e2.FindElement("Min"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.AbsolutePanTiltPositionSpace.YRange.Min, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.AbsolutePanTiltPositionSpace.YRange.Min, _ = parseXsdFloat(e3.Text(), 64)
 				}
 				if e3 := e2.FindElement("Max"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.AbsolutePanTiltPositionSpace.YRange.Max, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.AbsolutePanTiltPositionSpace.YRange.Max, _ = parseXsdFloat(e3.Text(), 64)
 				}
 			}
 		}
@@ -981,10 +997,10 @@ func (dev *Device) DecodePTZNode(data []byte) (*PTZNode, error) {
 			}
 			if e2 := e1.FindElement("XRange"); e2 != nil {
 				if e3 := e2.FindElement("Min"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.AbsoluteZoomPositionSpace.XRange.Min, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.AbsoluteZoomPositionSpace.XRange.Min, _ = parseXsdFloat(e3.Text(), 64)
 				}
 				if e3 := e2.FindElement("Max"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.AbsoluteZoomPositionSpace.XRange.Max, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.AbsoluteZoomPositionSpace.XRange.Max, _ = parseXsdFloat(e3.Text(), 64)
 				}
 			}
 		}
@@ -994,18 +1010,18 @@ func (dev *Device) DecodePTZNode(data []byte) (*PTZNode, error) {
 			}
 			if e2 := e1.FindElement("XRange"); e2 != nil {
 				if e3 := e2.FindElement("Min"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.RelativePanTiltTranslationSpace.XRange.Min, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.RelativePanTiltTranslationSpace.XRange.Min, _ = parseXsdFloat(e3.Text(), 64)
 				}
 				if e3 := e2.FindElement("Max"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.RelativePanTiltTranslationSpace.XRange.Max, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.RelativePanTiltTranslationSpace.XRange.Max, _ = parseXsdFloat(e3.Text(), 64)
 				}
 			}
 			if e2 := e1.FindElement("YRange"); e2 != nil {
 				if e3 := e2.FindElement("Min"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.RelativePanTiltTranslationSpace.YRange.Min, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.RelativePanTiltTranslationSpace.YRange.Min, _ = parseXsdFloat(e3.Text(), 64)
 				}
 				if e3 := e2.FindElement("Max"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.RelativePanTiltTranslationSpace.YRange.Max, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.RelativePanTiltTranslationSpace.YRange.Max, _ = parseXsdFloat(e3.Text(), 64)
 				}
 			}
 		}
@@ -1015,10 +1031,10 @@ func (dev *Device) DecodePTZNode(data []byte) (*PTZNode, error) {
 			}
 			if e2 := e1.FindElement("XRange"); e2 != nil {
 				if e3 := e2.FindElement("Min"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.RelativeZoomTranslationSpace.XRange.Min, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.RelativeZoomTranslationSpace.XRange.Min, _ = parseXsdFloat(e3.Text(), 64)
 				}
 				if e3 := e2.FindElement("Max"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.RelativeZoomTranslationSpace.XRange.Max, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.RelativeZoomTranslationSpace.XRange.Max, _ = parseXsdFloat(e3.Text(), 64)
 				}
 			}
 		}
@@ -1028,18 +1044,18 @@ func (dev *Device) DecodePTZNode(data []byte) (*PTZNode, error) {
 			}
 			if e2 := e1.FindElement("XRange"); e2 != nil {
 				if e3 := e2.FindElement("Min"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.ContinuousPanTiltVelocitySpace.XRange.Min, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.ContinuousPanTiltVelocitySpace.XRange.Min, _ = parseXsdFloat(e3.Text(), 64)
 				}
 				if e3 := e2.FindElement("Max"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.ContinuousPanTiltVelocitySpace.XRange.Max, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.ContinuousPanTiltVelocitySpace.XRange.Max, _ = parseXsdFloat(e3.Text(), 64)
 				}
 			}
 			if e2 := e1.FindElement("YRange"); e2 != nil {
 				if e3 := e2.FindElement("Min"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.ContinuousPanTiltVelocitySpace.YRange.Min, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.ContinuousPanTiltVelocitySpace.YRange.Min, _ = parseXsdFloat(e3.Text(), 64)
 				}
 				if e3 := e2.FindElement("Max"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.ContinuousPanTiltVelocitySpace.YRange.Max, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.ContinuousPanTiltVelocitySpace.YRange.Max, _ = parseXsdFloat(e3.Text(), 64)
 				}
 			}
 		}
@@ -1049,10 +1065,10 @@ func (dev *Device) DecodePTZNode(data []byte) (*PTZNode, error) {
 			}
 			if e2 := e1.FindElement("XRange"); e2 != nil {
 				if e3 := e2.FindElement("Min"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.ContinuousZoomVelocitySpace.XRange.Min, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.ContinuousZoomVelocitySpace.XRange.Min, _ = parseXsdFloat(e3.Text(), 64)
 				}
 				if e3 := e2.FindElement("Max"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.ContinuousZoomVelocitySpace.XRange.Max, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.ContinuousZoomVelocitySpace.XRange.Max, _ = parseXsdFloat(e3.Text(), 64)
 				}
 			}
 		}
@@ -1062,10 +1078,10 @@ func (dev *Device) DecodePTZNode(data []byte) (*PTZNode, error) {
 			}
 			if e2 := e1.FindElement("XRange"); e2 != nil {
 				if e3 := e2.FindElement("Min"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.PanTiltSpeedSpace.XRange.Min, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.PanTiltSpeedSpace.XRange.Min, _ = parseXsdFloat(e3.Text(), 64)
 				}
 				if e3 := e2.FindElement("Max"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.PanTiltSpeedSpace.XRange.Max, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.PanTiltSpeedSpace.XRange.Max, _ = parseXsdFloat(e3.Text(), 64)
 				}
 			}
 
@@ -1076,10 +1092,10 @@ func (dev *Device) DecodePTZNode(data []byte) (*PTZNode, error) {
 			}
 			if e2 := e1.FindElement("XRange"); e2 != nil {
 				if e3 := e2.FindElement("Min"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.ZoomSpeedSpace.XRange.Min, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.ZoomSpeedSpace.XRange.Min, _ = parseXsdFloat(e3.Text(), 64)
 				}
 				if e3 := e2.FindElement("Max"); e3 != nil {
-					ptzNode.SupportedPTZSpaces.ZoomSpeedSpace.XRange.Max, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzNode.SupportedPTZSpaces.ZoomSpeedSpace.XRange.Max, _ = parseXsdFloat(e3.Text(), 64)
 				}
 			}
 		}
@@ -1151,15 +1167,15 @@ func (dev *Device) DecodePTZConfiguration(data []byte) (*PTZConfiguration, error
 	if e := configuration.FindElement("DefaultPTZSpeed"); e != nil {
 		if e1 := e.FindElement("PanTilt"); e1 != nil {
 			if e2 := e1.FindElement("x"); e2 != nil {
-				ptzConfiguration.DefaultPTZSpeed.PanTilt.X, _ = strconv.ParseFloat(e2.Text(), 64)
+				ptzConfiguration.DefaultPTZSpeed.PanTilt.X, _ = parseXsdFloat(e2.Text(), 64)
 			}
 			if e2 := e1.FindElement("y"); e2 != nil {
-				ptzConfiguration.DefaultPTZSpeed.PanTilt.Y, _ = strconv.ParseFloat(e2.Text(), 64)
+				ptzConfiguration.DefaultPTZSpeed.PanTilt.Y, _ = parseXsdFloat(e2.Text(), 64)
 			}
 		}
 		if e1 := e.FindElement("Zoom"); e1 != nil {
 			if e2 := e1.FindElement("x"); e2 != nil {
-				ptzConfiguration.DefaultPTZSpeed.Zoom.X, _ = strconv.ParseFloat(e2.Text(), 64)
+				ptzConfiguration.DefaultPTZSpeed.Zoom.X, _ = parseXsdFloat(e2.Text(), 64)
 			}
 		}
 	}
@@ -1173,18 +1189,18 @@ func (dev *Device) DecodePTZConfiguration(data []byte) (*PTZConfiguration, error
 			}
 			if e2 := e1.FindElement("XRange"); e2 != nil {
 				if e3 := e2.FindElement("Min"); e3 != nil {
-					ptzConfiguration.PanTiltLimits.Range.XRange.Min, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzConfiguration.PanTiltLimits.Range.XRange.Min, _ = parseXsdFloat(e3.Text(), 64)
 				}
 				if e3 := e2.FindElement("Max"); e3 != nil {
-					ptzConfiguration.PanTiltLimits.Range.XRange.Max, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzConfiguration.PanTiltLimits.Range.XRange.Max, _ = parseXsdFloat(e3.Text(), 64)
 				}
 			}
 			if e2 := e1.FindElement("YRange"); e2 != nil {
 				if e3 := e2.FindElement("Min"); e3 != nil {
-					ptzConfiguration.PanTiltLimits.Range.YRange.Min, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzConfiguration.PanTiltLimits.Range.YRange.Min, _ = parseXsdFloat(e3.Text(), 64)
 				}
 				if e3 := e2.FindElement("Max"); e3 != nil {
-					ptzConfiguration.PanTiltLimits.Range.YRange.Max, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzConfiguration.PanTiltLimits.Range.YRange.Max, _ = parseXsdFloat(e3.Text(), 64)
 				}
 			}
 		}
@@ -1196,10 +1212,10 @@ func (dev *Device) DecodePTZConfiguration(data []byte) (*PTZConfiguration, error
 			}
 			if e2 := e1.FindElement("XRange"); e2 != nil {
 				if e3 := e2.FindElement("Min"); e3 != nil {
-					ptzConfiguration.ZoomLimits.Range.XRange.Min, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzConfiguration.ZoomLimits.Range.XRange.Min, _ = parseXsdFloat(e3.Text(), 64)
 				}
 				if e3 := e2.FindElement("Max"); e3 != nil {
-					ptzConfiguration.ZoomLimits.Range.XRange.Max, _ = strconv.ParseFloat(e3.Text(), 64)
+					ptzConfiguration.ZoomLimits.Range.XRange.Max, _ = parseXsdFloat(e3.Text(), 64)
 				}
 			}
 		}
@@ -1294,7 +1310,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 				}
 			}
 			if e1 := e.FindElement("Quality"); e1 != nil {
-				profile.VideoEncoderConfiguration.Quality, _ = strconv.ParseFloat(e1.Text(), 64)
+				profile.VideoEncoderConfiguration.Quality, _ = parseXsdFloat(e1.Text(), 64)
 			}
 			if e1 := e.FindElement("RateControl"); e1 != nil {
 				if e2 := e1.FindElement("FrameRateLimit"); e2 != nil {
@@ -1498,10 +1514,10 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 						profile.PTZConfiguration.DefaultPTZSpeed.PanTilt.Space = e3.Text()
 					}
 					if e3 := e2.FindElement("x"); e3 != nil {
-						profile.PTZConfiguration.DefaultPTZSpeed.PanTilt.X, _ = strconv.ParseFloat(e3.Text(), 64)
+						profile.PTZConfiguration.DefaultPTZSpeed.PanTilt.X, _ = parseXsdFloat(e3.Text(), 64)
 					}
 					if e3 := e2.FindElement("y"); e3 != nil {
-						profile.PTZConfiguration.DefaultPTZSpeed.PanTilt.Y, _ = strconv.ParseFloat(e3.Text(), 64)
+						profile.PTZConfiguration.DefaultPTZSpeed.PanTilt.Y, _ = parseXsdFloat(e3.Text(), 64)
 					}
 				}
 				if e2 := e1.FindElement("Zoom"); e2 != nil {
@@ -1509,7 +1525,7 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 						profile.PTZConfiguration.DefaultPTZSpeed.Zoom.Space = e3.Text()
 					}
 					if e3 := e2.FindElement("x"); e3 != nil {
-						profile.PTZConfiguration.DefaultPTZSpeed.Zoom.X, _ = strconv.ParseFloat(e3.Text(), 64)
+						profile.PTZConfiguration.DefaultPTZSpeed.Zoom.X, _ = parseXsdFloat(e3.Text(), 64)
 					}
 				}
 			}
@@ -1526,18 +1542,18 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 					}
 					if e3 := e2.FindElement("XRange"); e3 != nil {
 						if e4 := e3.FindElement("Min"); e4 != nil {
-							profile.PTZConfiguration.PanTiltLimits.Range.XRange.Min, _ = strconv.ParseFloat(e4.Text(), 64)
+							profile.PTZConfiguration.PanTiltLimits.Range.XRange.Min, _ = parseXsdFloat(e4.Text(), 64)
 						}
 						if e4 := e3.FindElement("Max"); e4 != nil {
-							profile.PTZConfiguration.PanTiltLimits.Range.XRange.Max, _ = strconv.ParseFloat(e4.Text(), 64)
+							profile.PTZConfiguration.PanTiltLimits.Range.XRange.Max, _ = parseXsdFloat(e4.Text(), 64)
 						}
 					}
 					if e3 := e2.FindElement("YRange"); e3 != nil {
 						if e4 := e3.FindElement("Min"); e4 != nil {
-							profile.PTZConfiguration.PanTiltLimits.Range.YRange.Min, _ = strconv.ParseFloat(e4.Text(), 64)
+							profile.PTZConfiguration.PanTiltLimits.Range.YRange.Min, _ = parseXsdFloat(e4.Text(), 64)
 						}
 						if e4 := e3.FindElement("Max"); e4 != nil {
-							profile.PTZConfiguration.PanTiltLimits.Range.YRange.Max, _ = strconv.ParseFloat(e4.Text(), 64)
+							profile.PTZConfiguration.PanTiltLimits.Range.YRange.Max, _ = parseXsdFloat(e4.Text(), 64)
 						}
 					}
 				}
@@ -1549,10 +1565,10 @@ func (dev *Device) DecodeProfiles(data []byte) ([]Profile, error) {
 					}
 					if e3 := e2.FindElement("XRange"); e3 != nil {
 						if e4 := e3.FindElement("Min"); e4 != nil {
-							profile.PTZConfiguration.ZoomLimits.Range.XRange.Min, _ = strconv.ParseFloat(e4.Text(), 64)
+							profile.PTZConfiguration.ZoomLimits.Range.XRange.Min, _ = parseXsdFloat(e4.Text(), 64)
 						}
 						if e4 := e3.FindElement("Max"); e4 != nil {
-							profile.PTZConfiguration.ZoomLimits.Range.XRange.Max, _ = strconv.ParseFloat(e4.Text(), 64)
+							profile.PTZConfiguration.ZoomLimits.Range.XRange.Max, _ = parseXsdFloat(e4.Text(), 64)
 						}
 					}
 				}
@@ -1728,7 +1744,7 @@ func (dev *Device) DecodeCreateProfile(data []byte) (*Profile, error) {
 			}
 		}
 		if e1 := e.FindElement("Quality"); e1 != nil {
-			profile.VideoEncoderConfiguration.Quality, _ = strconv.ParseFloat(e1.Text(), 64)
+			profile.VideoEncoderConfiguration.Quality, _ = parseXsdFloat(e1.Text(), 64)
 		}
 		if e1 := e.FindElement("RateControl"); e1 != nil {
 			if e2 := e1.FindElement("FrameRateLimit"); e2 != nil {
@@ -1932,10 +1948,10 @@ func (dev *Device) DecodeCreateProfile(data []byte) (*Profile, error) {
 					profile.PTZConfiguration.DefaultPTZSpeed.PanTilt.Space = e3.Text()
 				}
 				if e3 := e2.FindElement("x"); e3 != nil {
-					profile.PTZConfiguration.DefaultPTZSpeed.PanTilt.X, _ = strconv.ParseFloat(e3.Text(), 64)
+					profile.PTZConfiguration.DefaultPTZSpeed.PanTilt.X, _ = parseXsdFloat(e3.Text(), 64)
 				}
 				if e3 := e2.FindElement("y"); e3 != nil {
-					profile.PTZConfiguration.DefaultPTZSpeed.PanTilt.Y, _ = strconv.ParseFloat(e3.Text(), 64)
+					profile.PTZConfiguration.DefaultPTZSpeed.PanTilt.Y, _ = parseXsdFloat(e3.Text(), 64)
 				}
 			}
 			if e2 := e1.FindElement("Zoom"); e2 != nil {
@@ -1943,7 +1959,7 @@ func (dev *Device) DecodeCreateProfile(data []byte) (*Profile, error) {
 					profile.PTZConfiguration.DefaultPTZSpeed.Zoom.Space = e3.Text()
 				}
 				if e3 := e2.FindElement("x"); e3 != nil {
-					profile.PTZConfiguration.DefaultPTZSpeed.Zoom.X, _ = strconv.ParseFloat(e3.Text(), 64)
+					profile.PTZConfiguration.DefaultPTZSpeed.Zoom.X, _ = parseXsdFloat(e3.Text(), 64)
 				}
 			}
 		}
@@ -1960,18 +1976,18 @@ func (dev *Device) DecodeCreateProfile(data []byte) (*Profile, error) {
 				}
 				if e3 := e2.FindElement("XRange"); e3 != nil {
 					if e4 := e3.FindElement("Min"); e4 != nil {
-						profile.PTZConfiguration.PanTiltLimits.Range.XRange.Min, _ = strconv.ParseFloat(e4.Text(), 64)
+						profile.PTZConfiguration.PanTiltLimits.Range.XRange.Min, _ = parseXsdFloat(e4.Text(), 64)
 					}
 					if e4 := e3.FindElement("Max"); e4 != nil {
-						profile.PTZConfiguration.PanTiltLimits.Range.XRange.Max, _ = strconv.ParseFloat(e4.Text(), 64)
+						profile.PTZConfiguration.PanTiltLimits.Range.XRange.Max, _ = parseXsdFloat(e4.Text(), 64)
 					}
 				}
 				if e3 := e2.FindElement("YRange"); e3 != nil {
 					if e4 := e3.FindElement("Min"); e4 != nil {
-						profile.PTZConfiguration.PanTiltLimits.Range.YRange.Min, _ = strconv.ParseFloat(e4.Text(), 64)
+						profile.PTZConfiguration.PanTiltLimits.Range.YRange.Min, _ = parseXsdFloat(e4.Text(), 64)
 					}
 					if e4 := e3.FindElement("Max"); e4 != nil {
-						profile.PTZConfiguration.PanTiltLimits.Range.YRange.Max, _ = strconv.ParseFloat(e4.Text(), 64)
+						profile.PTZConfiguration.PanTiltLimits.Range.YRange.Max, _ = parseXsdFloat(e4.Text(), 64)
 					}
 				}
 			}
@@ -1983,10 +1999,10 @@ func (dev *Device) DecodeCreateProfile(data []byte) (*Profile, error) {
 				}
 				if e3 := e2.FindElement("XRange"); e3 != nil {
 					if e4 := e3.FindElement("Min"); e4 != nil {
-						profile.PTZConfiguration.ZoomLimits.Range.XRange.Min, _ = strconv.ParseFloat(e4.Text(), 64)
+						profile.PTZConfiguration.ZoomLimits.Range.XRange.Min, _ = parseXsdFloat(e4.Text(), 64)
 					}
 					if e4 := e3.FindElement("Max"); e4 != nil {
-						profile.PTZConfiguration.ZoomLimits.Range.XRange.Max, _ = strconv.ParseFloat(e4.Text(), 64)
+						profile.PTZConfiguration.ZoomLimits.Range.XRange.Max, _ = parseXsdFloat(e4.Text(), 64)
 					}
 				}
 			}
@@ -2125,15 +2141,15 @@ func (dev *Device) DecodePresets(data []byte) ([]PTZPreset, error) {
 				y := e1.SelectAttrValue("y", "")
 
 				preset.PTZPosition.PanTilt.Space = space
-				preset.PTZPosition.PanTilt.X, _ = strconv.ParseFloat(x, 64)
-				preset.PTZPosition.PanTilt.Y, _ = strconv.ParseFloat(y, 64)
+				preset.PTZPosition.PanTilt.X, _ = parseXsdFloat(x, 64)
+				preset.PTZPosition.PanTilt.Y, _ = parseXsdFloat(y, 64)
 			}
 			if e1 := e.FindElement("Zoom"); e1 != nil {
 				space := e1.SelectAttrValue("space", "")
 				x := e1.SelectAttrValue("x", "")
 
 				preset.PTZPosition.Zoom.Space = space
-				preset.PTZPosition.Zoom.X, _ = strconv.ParseFloat(x, 64)
+				preset.PTZPosition.Zoom.X, _ = parseXsdFloat(x, 64)
 			}
 		}
 
@@ -2165,15 +2181,15 @@ func (dev *Device) DecodeStatus(data []byte) (*PTZStatus, error) {
 			y := e1.SelectAttrValue("y", "")
 
 			ptzStatus.Position.PanTilt.Space = space
-			ptzStatus.Position.PanTilt.X, _ = strconv.ParseFloat(x, 64)
-			ptzStatus.Position.PanTilt.Y, _ = strconv.ParseFloat(y, 64)
+			ptzStatus.Position.PanTilt.X, _ = parseXsdFloat(x, 64)
+			ptzStatus.Position.PanTilt.Y, _ = parseXsdFloat(y, 64)
 		}
 		if e1 := e.FindElement("Zoom"); e1 != nil {
 			space := e1.SelectAttrValue("space", "")
 			x := e1.SelectAttrValue("x", "")
 
 			ptzStatus.Position.Zoom.Space = space
-			ptzStatus.Position.Zoom.X, _ = strconv.ParseFloat(x, 64)
+			ptzStatus.Position.Zoom.X, _ = parseXsdFloat(x, 64)
 		}
 	}
 	if e := status.FindElement("MoveStatus"); e != nil {
